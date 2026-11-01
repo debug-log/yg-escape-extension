@@ -14,10 +14,10 @@ const root=path.resolve(__dirname,'..');
 const temp=fs.mkdtempSync(path.join(process.platform==='win32'?root:os.tmpdir(),'xre-update-chrome-'));
 const installed=path.join(temp,'installed'),candidate=path.join(temp,'candidate'),output=path.join(temp,'dist');
 const packageScript=path.join(root,'scripts/package.py');
-execFileSync('python3',[packageScript,'--out-dir',output]);
+execFileSync('python',[packageScript,'--out-dir',output]);
 const current=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'))).version;
 const archive=path.join(output,`yg-escape-extension-${current}.zip`);
-for(const dir of [installed,candidate])execFileSync('python3',['-c','import sys,zipfile; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])',archive,dir]);
+for(const dir of [installed,candidate])execFileSync('python',['-c','import sys,zipfile; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])',archive,dir]);
 const nextVersion=current.split('.').map(Number);nextVersion[nextVersion.length-1]++;
 const version=nextVersion.join('.');
 for(const dir of [installed,candidate]){
@@ -27,7 +27,7 @@ for(const dir of [installed,candidate]){
  fs.writeFileSync(path.join(dir,'manifest.json'),JSON.stringify(manifest));
 }
 fs.appendFileSync(path.join(candidate,'style.css'),'\n/* updated integration fixture */\n');
-execFileSync('python3',[packageScript,'--root',candidate,'--out-dir',output]);
+execFileSync('python',[packageScript,'--root',candidate,'--out-dir',output]);
 const zip=fs.readFileSync(path.join(output,`yg-escape-extension-${version}.zip`));
 const sha=crypto.createHash('sha256').update(zip).digest('hex');
 const download=`https://github.com/debug-log/yg-escape-extension/releases/download/v${version}/yg-escape-extension-${version}.zip`;

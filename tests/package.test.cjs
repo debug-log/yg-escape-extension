@@ -7,7 +7,7 @@ const {execFileSync}=require('node:child_process');
 const U=require('../update-core.js');
 test('shipping ZIP roundtrips through the real updater and excludes research/backups',async t=>{
  const output=await fs.mkdtemp(path.join(os.tmpdir(),'xre-package-test-'));t.after(()=>fs.rm(output,{recursive:true,force:true}));
- execFileSync('python3',['scripts/package.py','--out-dir',output]);
+ execFileSync('python',['scripts/package.py','--out-dir',output]);
  const version=JSON.parse(await fs.readFile('manifest.json')).version;
  const bytes=new Uint8Array(await fs.readFile(path.join(output,`yg-escape-extension-${version}.zip`)));
  const pkg=await U.parsePackage(bytes,version);
@@ -23,5 +23,5 @@ test('shipping ZIP roundtrips through the real updater and excludes research/bac
  assert.ok(![...pkg.files.keys()].some(f=>f.startsWith('tests/')||f.includes('backup')||f.endsWith('.csv')));
  assert.ok(!pkg.files.has('package.json'));
  const digest=await fs.readFile(path.join(output,`yg-escape-extension-${version}.zip.sha256`),'utf8');assert.ok(digest.startsWith(await U.sha256(bytes)));
- assert.throws(()=>execFileSync('python3',['scripts/package.py','--out-dir',output,'--tag','v0.0.1'],{stdio:'pipe'}));
+ assert.throws(()=>execFileSync('python',['scripts/package.py','--out-dir',output,'--tag','v0.0.1'],{stdio:'pipe'}));
 });

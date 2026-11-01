@@ -7,7 +7,7 @@ const {execFileSync}=require('node:child_process');
 const U=require('../update-core.js');
 
 function archive(files,version='1.4.1') {
-  return new Uint8Array(execFileSync('python3',['-c',`
+  return new Uint8Array(execFileSync('python',['-c',`
 import sys,json,io,zipfile,hashlib
 data=json.loads(sys.argv[1]); version=sys.argv[2]
 files={k:v.encode() for k,v in data.items()}

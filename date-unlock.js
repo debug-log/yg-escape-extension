@@ -14,6 +14,11 @@
       for(const cell of document.querySelectorAll(selector)){
         cell.classList.remove('disabled');
         cell.classList.add('available');
+        // Keep the calendar's selected background and date text visible.
+        cell.style.setProperty('outline','2px dashed #b45309','important');
+        cell.style.setProperty('outline-offset','-3px','important');
+        const hint='확장 프로그램으로 선택 제한을 해제한 날짜';
+        if(!cell.title.includes(hint))cell.title=cell.title?cell.title+' · '+hint:hint;
         count++;
       }
     }finally{if(active)observe();}
