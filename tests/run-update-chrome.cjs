@@ -9,7 +9,9 @@ const http=require('node:http');
 const crypto=require('node:crypto');
 const assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..');
-const temp=fs.mkdtempSync(path.join(os.tmpdir(),'xre-update-chrome-'));
+// Windows AppData/Temp is deliberately blocked by File System Access. Use a
+// normal workspace folder, as users do when installing under Documents.
+const temp=fs.mkdtempSync(path.join(process.platform==='win32'?root:os.tmpdir(),'xre-update-chrome-'));
 const installed=path.join(temp,'installed'),candidate=path.join(temp,'candidate'),output=path.join(temp,'dist');
 const packageScript=path.join(root,'scripts/package.py');
 execFileSync('python3',[packageScript,'--out-dir',output]);
