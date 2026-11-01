@@ -39,16 +39,14 @@
   async function changeSiteSetting(setting, enabled) {
     if (busy || !origin) return;
     busy = true;
-    for (const id of ['dateUnlockToggle', 'antiDebugToggle', 'restoreDefaults']) $(id).disabled = true;
+    for (const id of ['dateUnlockToggle', 'antiDebugToggle']) $(id).disabled = true;
     $('popupMessage').textContent = '';
     try {
       // Request directly from the click gesture, before any storage reads.
       const granted = await chrome.permissions.request({origins: [origin + '/*']});
       if (!granted) throw Error('사이트 접근 권한이 허용되지 않아 설정을 변경하지 않았습니다.');
       await sendCommand({type: 'siteSetting', site: origin, setting, enabled});
-      $('popupMessage').textContent = setting === 'restoreDefaults'
-        ? '기본 규칙 복원 완료. 새로고침 필요.'
-        : '저장 완료';
+      $('popupMessage').textContent = '저장 완료';
     } catch (error) {
       $('popupMessage').textContent = error.message;
     } finally {
@@ -58,7 +56,6 @@
   }
   $('dateUnlockToggle').onchange = () => changeSiteSetting('dateUnlock', $('dateUnlockToggle').checked);
   $('antiDebugToggle').onchange = () => changeSiteSetting('antiDebug', $('antiDebugToggle').checked);
-  $('restoreDefaults').onclick = () => changeSiteSetting('restoreDefaults');
 
   function matchesPage(rule) {
     return rule.enabled && rule.site === origin && (!rule.pageParams
@@ -95,10 +92,6 @@
     $('dateUnlockToggle').checked = origin === 'https://keyescape.com' && registered && config.keyescapeDateUnlockEnabled !== false;
     $('antiDebugToggle').disabled = !origin;
     $('antiDebugToggle').checked = antiDesired;
-    $('restoreDefaults').hidden = origin !== 'https://keyescape.com';
-    $('restoreDefaults').disabled = false;
-    $('dateUnlockState').textContent = dateText;
-    $('antiDebugState').textContent = antiDesired ? '새로고침 필요' : '꺼짐';
     $('rule').textContent = rules.length ? `사용 중인 규칙 ${rules.length}개` : '사용 중인 규칙 없음';
 
     try {
@@ -122,6 +115,9 @@
         ? `${state.count}건 변경 · ${new Date(last.at).toLocaleTimeString()}${last.items !== null ? ' · 시간대 ' + last.items + '개' : ''}`
         : '변경 기록 없음';
     } catch {
+      if (busy) return;
+      $('dateUnlockState').textContent = dateText;
+      $('antiDebugState').textContent = antiDesired ? '새로고침 필요' : '꺼짐';
       $('state').textContent = registered ? '새로고침 필요' : '사이트 등록 필요';
       $('reload').hidden = !origin;
     }

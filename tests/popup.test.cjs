@@ -3,9 +3,9 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const fs = require('node:fs');
 
-async function popup(sendMessage) {
+async function popup(sendMessage, options = {}) {
   const elements = new Map();
-  let polling = false;
+  let polling = false, tick;
   const context = {
     URL,
     document: {getElementById(id) {
@@ -14,15 +14,15 @@ async function popup(sendMessage) {
     }},
     chrome: {
       tabs: {query: async () => [{id: 1, url: 'https://keyescape.com/reservation1.php'}],
-        sendMessage: async () => { throw Error('no content script'); }},
-      storage: {session: {set: async () => {}}, local: {get: async () => ({config: {enabled: false, sites: [], rules: []}})}},
+        sendMessage: options.pageState || (async () => { throw Error('no content script'); })},
+      storage: {session: {set: async () => {}}, local: {get: async () => ({config: options.config || {enabled: false, sites: [], rules: []}})}},
       runtime: {sendMessage},
       permissions: {request: async () => true}
     },
-    setInterval() { polling = true; }
+    setInterval(callback) { polling = true; tick = callback; }
   };
   await vm.runInNewContext(fs.readFileSync('popup.js', 'utf8'), context);
-  return {elements, polling};
+  return {elements, polling, tick};
 }
 
 test('missing startup reply shows reload instructions and still initializes popup', async () => {
@@ -58,4 +58,26 @@ test('background setting errors are preserved', async () => {
   const {elements} = await popup(async message => message.type === 'sync' ? {ok: true} : {ok: false, error: '저장 실패'});
   await elements.get('antiDebugToggle').onchange();
   assert.equal(elements.get('popupMessage').textContent, '저장 실패');
+});
+
+
+test('polling retains applied labels while awaiting page state, then shows actual reload requirement', async () => {
+  let pending, delayed = false;
+  const applied = {ready: true, enabled: true, antiDebug: {ready: true, active: true}, dateUnlock: {ready: true, active: true}};
+  const {elements, tick} = await popup(async () => ({ok: true}), {
+    config: {enabled: true, sites: ['https://keyescape.com'], rules: []},
+    pageState: () => delayed ? new Promise(resolve => { pending = resolve; }) : Promise.resolve(applied)
+  });
+  assert.equal(elements.get('dateUnlockState').textContent, '적용 중');
+  assert.equal(elements.get('antiDebugState').textContent, '적용 중');
+  delayed = true;
+  const refresh = tick();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(elements.get('dateUnlockState').textContent, '적용 중');
+  assert.equal(elements.get('antiDebugState').textContent, '적용 중');
+  pending({...applied, antiDebug: {...applied.antiDebug, reloadRequired: true}});
+  await refresh;
+  assert.equal(elements.get('dateUnlockState').textContent, '적용 중');
+  assert.equal(elements.get('antiDebugState').textContent, '새로고침 필요');
+  assert.equal(elements.get('reload').hidden, false);
 });

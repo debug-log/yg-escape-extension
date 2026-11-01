@@ -89,3 +89,24 @@ function ruleRow(r){
    actions.append(toggle,button('편집',()=>{fill(r);$('editorTitle').scrollIntoView({block:'start'});}));row.append(info,actions);return row;
 
 }
+
+$('restoreDefaults').onclick = async () => {
+ const control = $('restoreDefaults');
+ if (control.disabled) return;
+ control.disabled = true;
+ try {
+  const granted = await chrome.permissions.request({origins: ['https://keyescape.com/*']});
+  if (!granted) throw Error('사이트 접근 권한이 필요합니다.');
+  const result = await chrome.runtime.sendMessage({type: 'siteSetting', site: 'https://keyescape.com', setting: 'restoreDefaults'});
+  if (!result?.ok) throw Error(result?.error || '확장 프로그램을 새로고침한 뒤 다시 시도해주세요.');
+  config = result.config;
+  baseline = structuredClone(config);
+  render();
+  renderQuick();
+  message('기본 규칙 복원 완료. 기존 규칙은 유지했습니다.');
+ } catch (error) {
+  message(error.message);
+ } finally {
+  control.disabled = false;
+ }
+};

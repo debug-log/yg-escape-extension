@@ -17,7 +17,7 @@ test('shipping ZIP roundtrips through the real updater and excludes research/bac
  for(const file of Object.values(pkg.manifest.icons||{}))assert.ok(pkg.files.has(file),`missing icon ${file}`);
  for(const [name,bytes] of pkg.files)if(name.endsWith('.html')){
   for(const match of new TextDecoder().decode(bytes).matchAll(/(?:src|href)="([^"#]+)"/g)){
-   if(!match[1].includes('://'))assert.ok(pkg.files.has(match[1]),`${name} references missing ${match[1]}`);
+   if(!match[1].includes('://'))assert.ok(pkg.files.has(match[1].split('?')[0]),`${name} references missing ${match[1]}`);
   }
  }
  assert.ok(![...pkg.files.keys()].some(f=>f.startsWith('tests/')||f.includes('backup')||f.endsWith('.csv')));

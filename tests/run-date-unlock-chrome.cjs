@@ -69,10 +69,10 @@ const fixture='<!doctype html><title>Date fixture</title><table><tr><td id="date
  await until(async()=>(await state()).dateUnlock.active===false,'popup disables dates');
  await until(()=>evaluate(popup.sessionId,"document.querySelector('#dateUnlockState').textContent.includes('새로고침 필요')&&!document.querySelector('#reload').hidden"),'popup reload prompt');
  await evaluate(popup.sessionId,"document.querySelector('#antiDebugToggle').click()",true);
- await until(()=>evaluate(popup.sessionId,"document.querySelector('#antiDebugState').textContent.includes('설정 꺼짐')"),'popup disables anti-debug');
+ await until(()=>evaluate(popup.sessionId,"!document.querySelector('#antiDebugToggle').checked&&document.querySelector('#antiDebugState').textContent.includes('새로고침 필요')"),'popup disables anti-debug');
  assert.ok((await state()).antiDebug.reloadRequired);
- await evaluate(popup.sessionId,"document.querySelector('#restoreDefaults').click()",true);
- await until(()=>evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config.rules.filter(x=>x.action==='weekdayFallback').length===34)"),'popup restores defaults');
+ await evaluate(options.sessionId,"showMode(false);document.querySelector('#restoreDefaults').click()",true);
+ await until(()=>evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config.rules.filter(x=>x.action==='weekdayFallback').length===34)"),'settings restores defaults');
  const restored=await evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config)");
  assert.equal(restored.enabled,false);assert.equal(restored.keyescapeDateUnlockEnabled,false);
  await call('Emulation.setDeviceMetricsOverride',{width:380,height:720,deviceScaleFactor:1,mobile:false},popup.sessionId);

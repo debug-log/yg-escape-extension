@@ -107,7 +107,7 @@
     directory = await store.get('directory');
     journal = await store.get('journal');
     const data = await chrome.storage.session.get('updateTarget');
-    target = data.updateTarget;
+    target = new URL(location.href).searchParams.has('settings') ? null : data.updateTarget;
     if (!target) $('reloadPage').checked = false;
     const {updateResult} = await chrome.storage.local.get('updateResult');
     if (new URL(location.href).searchParams.has('complete') && updateResult) {
