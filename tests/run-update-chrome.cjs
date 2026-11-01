@@ -40,9 +40,9 @@ async function until(check,label,timeout=15000){const deadline=Date.now()+timeou
 async function intercept(sessionId){await call('Fetch.enable',{patterns:[{urlPattern:'https://api.github.com/repos/debug-log/yg-escape-extension/releases/latest'},{urlPattern:download}]},sessionId);}
 async function tab(url){const {targetId}=await call('Target.createTarget',{url:'about:blank'});const {sessionId}=await call('Target.attachToTarget',{targetId,flatten:true});await intercept(sessionId);await call('Page.navigate',{url},sessionId);await until(()=>evaluate(sessionId,`document.readyState==='complete' && location.href!=='about:blank'`).catch(()=>false),'tab load');return {sessionId,targetId};}
 async function drop(sessionId,dir){
- await evaluate(sessionId,`window.dropDone=false;document.addEventListener('dragover',e=>e.preventDefault());document.addEventListener('drop',async e=>{e.preventDefault();window.testDirectory=await e.dataTransfer.items[0].getAsFileSystemHandle();window.dropDone=true;},{once:true});`);
+ await evaluate(sessionId,`window.dropDone=false;window.dropError=null;document.addEventListener('dragover',e=>e.preventDefault());document.addEventListener('drop',async e=>{e.preventDefault();try{window.testDirectory=await e.dataTransfer.items[0].getAsFileSystemHandle();if(!testDirectory)throw Error('Directory handle was null; items='+e.dataTransfer.items.length);window.dropDone=true;}catch(error){window.dropError=error.name+': '+error.message;}},{once:true});`);
  for(const type of ['dragEnter','dragOver','drop'])await call('Input.dispatchDragEvent',{type,x:100,y:100,data:{items:[],files:[dir],dragOperationsMask:1}},sessionId);
- await until(()=>evaluate(sessionId,'window.dropDone'),'directory handle');
+ await until(async()=>{const state=await evaluate(sessionId,'({done:window.dropDone,error:window.dropError})');if(state.error)throw Error(state.error);return state.done;},'directory handle');
 }
 const deadline=setTimeout(()=>{console.error('Updater integration deadline exceeded');child?.kill();process.exit(1);},150000);
 (async()=>{try{
@@ -67,6 +67,7 @@ const deadline=setTimeout(()=>{console.error('Updater integration deadline excee
   }
   const p=pending.get(m.id);if(p){pending.delete(m.id);clearTimeout(p.timer);m.error?p.reject(Error(m.error.message)):p.resolve(m.result);}
  };
+ console.log('BROWSER',await call('Browser.getVersion'));
  const management=await tab('chrome://extensions');
  await evaluate(management.sessionId,`new Promise(resolve=>chrome.developerPrivate.updateProfileConfiguration({inDeveloperMode:true},resolve))`);
  const {id}=await call('Extensions.loadUnpacked',{path:installed});const extension='chrome-extension://'+id;
