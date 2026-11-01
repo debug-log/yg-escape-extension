@@ -11,7 +11,7 @@ function render(){
  label.append(toggle,document.createTextNode(' 개발자도구 방해 완화'));row.append(label);
  if(site==='https://keyescape.com'){
   const dateLabel=document.createElement('label');const dateToggle=document.createElement('input');dateToggle.type='checkbox';dateToggle.id='keyescapeDateUnlock';dateToggle.checked=config.keyescapeDateUnlockEnabled!==false;
-  dateToggle.onchange=async()=>{dateToggle.disabled=true;try{config.keyescapeDateUnlockEnabled=dateToggle.checked;await persist();message('날짜 자동 열기 설정을 저장했습니다. 이미 열린 날짜를 원래대로 되돌리려면 대상 페이지를 새로고침하세요.');}catch(e){message(e.message);}finally{dateToggle.disabled=false;}};
+  dateToggle.onchange=async()=>{dateToggle.disabled=true;try{config.keyescapeDateUnlockEnabled=dateToggle.checked;await persist();message('날짜 자동 열기 설정을 적용했습니다. 현재 테마를 유지하며, 끄면 확장이 열었던 날짜를 원래대로 되돌립니다.');}catch(e){message(e.message);}finally{dateToggle.disabled=false;}};
   dateLabel.append(dateToggle,document.createTextNode(' 날짜 자동 열기'));row.append(dateLabel);
  }
  $('sites').append(row);}
