@@ -33,7 +33,7 @@
 - [x] 1. Tests then update-core.js: version comparison, release selection/cache, ZIP verification, directory proof, journaled apply/recovery. Test real filesystem adapters and injected write failures.
 - [x] 2. update-store.js, update.html/update.js, popup-updates.js, manifest/background integration: native permission flow, cached notices, progress/recovery, startup completion. Test isolated Chrome with real FileSystemDirectoryHandle and local release fixture.
 - [x] 3. scripts/package.py and GitHub workflow: allowlisted runtime ZIP, SHA-256 inventory, version/tag consistency; include only approved default-rules JSON. Roundtrip packages in core tests.
-- [ ] 4. Run full Node suite, existing Chrome suites and new updater integration. Review whole change, then publish 1.4.0 and verify live GitHub metadata/download. Document the one-time bootstrap and remaining native UI coverage.
+- [x] 4. Run full Node suite, existing Chrome suites and new updater integration. Review whole change, then publish 1.4.0 and verify live GitHub metadata/download. Document the one-time bootstrap and remaining native UI coverage.
 
 ## Progress
 
@@ -44,3 +44,5 @@
 - Windows fix: explicitly read UTF-8 manifest in Python. Windows AppData/Temp is blocked by File System Access; browser integration uses a normal workspace directory, matching documented installation under Documents.
 - Fresh reviewer found no blocking updater defects; Windows encoding finding fixed. Native picker/permission dialogs are still manual verification (automated profile pre-grants read/write). Browser termination mid-write is not explicitly simulated; durable rollback is tested with real filesystem write/lock failures.
 - Other-session popup styling/icons were preserved and included in the package; package tests check HTML and manifest resource references.
+
+- Final deployment: v1.4.0 published from 67704d6. Final suite 59/59; Windows and Ubuntu release workflow 41328432634 succeeded. Live GitHub ZIP downloaded by the production updater core and verified: 29 files, 1,279,792 bytes, SHA-256 70c4cdbd87bc23251bbad4e790c7e536e9f99453982b9ad7df03de35d98054f3. Native folder consent UI remains manual.
