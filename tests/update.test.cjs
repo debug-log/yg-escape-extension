@@ -70,7 +70,7 @@ test('directory proof rejects a similar copy and removes its temporary marker',a
  const root=await temp(t);const copy=await temp(t);const dir=await directory(root);
  const read=async name=>new Response(await fs.readFile(path.join(root,name)));
  await U.verifyDirectory(dir,read);
- await assert.rejects(U.verifyDirectory(await directory(copy),read));
+ await assert.rejects(U.verifyDirectory(await directory(copy),read),/설치 폴더/);
  assert.deepEqual(await fs.readdir(root),[]);assert.deepEqual(await fs.readdir(copy),[]);
 });
 test('apply replaces files, writes manifest last and keeps a durable backup',async t=>{

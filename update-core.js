@@ -175,8 +175,12 @@
     const nonce = crypto.randomUUID(), name = `xre-install-check-${nonce}.json`;
     try {
       await writeFile(directory, name, new TextEncoder().encode(nonce));
-      const response = await fetchInstalled(name);
-      if (!response.ok || await response.text() !== nonce) throw Error('현재 실행 중인 확장의 설치 폴더가 아닙니다.');
+      let matches = false;
+      try {
+        const response = await fetchInstalled(name);
+        matches = response.ok && await response.text() === nonce;
+      } catch { /* A different directory is not visible through this extension. */ }
+      if (!matches) throw Error('현재 실행 중인 확장의 설치 폴더가 아닙니다. Chrome에 등록한 폴더를 선택해주세요.');
     } finally { await directory.removeEntry(name).catch(() => {}); }
   }
 

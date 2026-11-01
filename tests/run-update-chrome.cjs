@@ -18,7 +18,8 @@ execFileSync('python3',[packageScript,'--out-dir',output]);
 const current=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'))).version;
 const archive=path.join(output,`yg-escape-extension-${current}.zip`);
 for(const dir of [installed,candidate])execFileSync('python3',['-c','import sys,zipfile; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])',archive,dir]);
-const version='1.4.1';
+const nextVersion=current.split('.').map(Number);nextVersion[nextVersion.length-1]++;
+const version=nextVersion.join('.');
 for(const dir of [installed,candidate]){
  const manifest=JSON.parse(fs.readFileSync(path.join(dir,'manifest.json')));
  manifest.host_permissions.push('http://127.0.0.1/*');
