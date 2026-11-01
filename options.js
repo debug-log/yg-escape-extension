@@ -28,7 +28,7 @@ async function saveAdvanced(enable=false){try{const rule=read();if(!config.sites
 $('save').onclick=()=>saveAdvanced(false);
 $('saveEnable').onclick=()=>saveAdvanced(true);
 $('preview').onclick=()=>{try{const rule=read();const url=new URL($('previewUrl').value);const sample=JSON.parse($('sample').value);const why=XRUX.reason(rule,url.href,$('previewMethod').value,sample,rule.pageURL);const result=why?{matched:false,value:sample}:XREngine.transform(sample,[{...rule,enabled:true}],url.href,$('previewMethod').value,rule.pageURL,$('previewBody').value);$('previewState').textContent=why||(result.matched?'조건 일치 · '+XRUX.summary(result.value)+(result.sourceDate?' · 원본 날짜 '+result.sourceDate:'')+' (저장 전 미리보기)':'적용 안 됨 · 요청 본문 조건, 오류 문구, 같은 요일의 이전 시간표를 확인하세요.');$('output').textContent=JSON.stringify(result.value,null,2);}catch(e){message(e.message);}};
-chrome.storage.local.get('config').then(result=>{config=result.config||{enabled:false,sites:[],rules:[]};baseline=structuredClone(config);render();renderQuick();visibility();useCurrent(false);});
+chrome.runtime.sendMessage({type:'sync'}).then(result=>{if(!result.ok)throw Error(result.error);return chrome.storage.local.get('config');}).then(result=>{config=result.config||{enabled:false,sites:[],rules:[]};baseline=structuredClone(config);render();renderQuick();visibility();useCurrent(false);}).catch(error=>message(error.message));
 
 function showMode(simple){$('quick').hidden=!simple;$('advanced').hidden=simple;$('simpleTab').setAttribute('aria-pressed',String(simple));$('advancedTab').setAttribute('aria-pressed',String(!simple));}
 $('simpleTab').onclick=()=>showMode(true);$('advancedTab').onclick=()=>showMode(false);

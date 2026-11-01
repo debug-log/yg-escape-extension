@@ -20,10 +20,26 @@ const initial = {
 };
 let queue = Promise.resolve();
 
+async function addDefaultRules(config) {
+  const response = await fetch(chrome.runtime.getURL('keyescape-weekday-fallback-rules.json'));
+  if (!response.ok) throw Error('기본 규칙 파일을 불러오지 못했습니다.');
+  const {rules} = await response.json();
+  if (!Array.isArray(rules) || rules.length !== 34) throw Error('기본 규칙 파일을 확인해주세요.');
+  const existing = new Set(config.rules.map(rule => rule.id));
+  return {...config, keyescapeDefaultsVersion: 1,
+    rules: [...config.rules, ...rules.filter(rule => !existing.has(rule.id))]};
+}
+
 async function sync() {
   let {config} = await chrome.storage.local.get('config');
   if (!config) {
     config = initial;
+    await chrome.storage.local.set({config});
+  }
+
+  // Seed once on installation/upgrade. Subsequent user deletions stay deleted.
+  if (config.keyescapeDefaultsVersion !== 1) {
+    config = await addDefaultRules(config);
     await chrome.storage.local.set({config});
   }
 
@@ -85,8 +101,62 @@ async function saveConfig(message) {
   return (await chrome.storage.local.get('config')).config;
 }
 
-chrome.runtime.onInstalled.addListener(syncSafely);
-chrome.runtime.onStartup.addListener(syncSafely);
+async function saveSiteSettings(message) {
+  const url = new URL(message.site);
+  if (!['http:', 'https:'].includes(url.protocol) || url.origin !== message.site) {
+    throw Error('올바른 사이트 주소가 필요합니다.');
+  }
+  if (!['dateUnlock', 'antiDebug', 'restoreDefaults'].includes(message.setting)
+      || (message.setting !== 'antiDebug' && message.site !== 'https://keyescape.com')) {
+    throw Error('지원하지 않는 사이트 설정입니다.');
+  }
+  if (message.setting !== 'restoreDefaults' && typeof message.enabled !== 'boolean') {
+    throw Error('설정 값을 확인해주세요.');
+  }
+  if (!await chrome.permissions.contains({origins: [message.site + '/*']})) {
+    throw Error('사이트 접근 권한을 먼저 허용해주세요.');
+  }
+  const {config: current = initial} = await chrome.storage.local.get('config');
+  let config = {...current, sites: [...new Set([...current.sites, message.site])]};
+  if (message.setting === 'dateUnlock') config.keyescapeDateUnlockEnabled = message.enabled;
+  if (message.setting === 'antiDebug') {
+    const disabled = new Set(config.antiDebugDisabledSites || []);
+    if (message.enabled) disabled.delete(message.site);
+    else disabled.add(message.site);
+    config.antiDebugDisabledSites = [...disabled];
+  }
+  if (message.setting === 'restoreDefaults') config = await addDefaultRules(config);
+  await chrome.storage.local.set({config});
+  await sync();
+  return (await chrome.storage.local.get('config')).config;
+}
+
+async function finishPendingUpdate() {
+  const {updatePending: pending} = await chrome.storage.local.get('updatePending');
+  if (!pending) return;
+  const version = chrome.runtime.getManifest().version;
+  const result = {version, ok: version === pending.version, pageReloaded: false, at: Date.now()};
+  if (!result.ok) result.error = '기대한 버전으로 시작하지 못했습니다. 업데이트 화면에서 복구해주세요.';
+  if (result.ok && Number.isInteger(pending.target?.id) && /^https?:\/\//.test(pending.target.url || '')) {
+    try {
+      const tab = await chrome.tabs.get(pending.target.id);
+      if (tab.url === pending.target.url) {
+        await chrome.tabs.reload(tab.id);
+        result.pageReloaded = true;
+      }
+    } catch { /* The original tab may have been closed or lost its permission. */ }
+  }
+  await chrome.storage.local.set({updateResult: result});
+  await chrome.storage.local.remove('updatePending');
+  await chrome.tabs.create({url: chrome.runtime.getURL('update.html?complete=1')});
+}
+
+function startExtension() {
+  schedule().then(finishPendingUpdate).catch(error => console.error('Extension startup', error));
+}
+
+chrome.runtime.onInstalled.addListener(startExtension);
+chrome.runtime.onStartup.addListener(startExtension);
 chrome.permissions.onRemoved.addListener(syncSafely);
 chrome.permissions.onAdded.addListener(syncSafely);
 chrome.runtime.onMessage.addListener((message, sender, reply) => {
@@ -96,6 +166,10 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
   const replyError = error => reply({ok: false, error: error.message});
   if (message.type === 'sync') {
     schedule().then(() => reply({ok: true}), replyError);
+    return true;
+  }
+  if (message.type === 'siteSetting') {
+    enqueue(() => saveSiteSettings(message)).then(config => reply({ok: true, config}), replyError);
     return true;
   }
   if (message.type === 'save' || message.type === 'enabled') {

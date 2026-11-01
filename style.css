@@ -4,3 +4,7 @@
 
 .site-group{border:1px solid #d7ddd7;border-radius:8px;margin:16px 0;overflow:hidden}.site-group>summary{cursor:pointer;background:#f2f5f2;padding:16px;list-style-position:inside}.site-group>summary>strong{margin-left:8px;overflow-wrap:anywhere}.site-meta{display:inline-flex;align-items:center;gap:12px;float:right;font-size:12px;color:#5d6d63}.site-status{border-left:1px solid #cbd5cd;padding-left:12px}.site-group>.rule-group{margin:0 16px}.site-group>.rule-group:last-child{border-bottom:0}.site-group>.rule-row{margin:0 16px}@media(max-width:650px){.site-meta{float:none;display:flex;margin:10px 0 0 22px}.site-group>summary{padding:14px}.site-group>.rule-group{margin:0 10px}}
 
+
+.popup #dateUnlockState,.popup #antiDebugState{font-size:12px;color:#52645b;margin:0 0 14px 22px}.popup #popupMessage{font-size:12px;color:#235c49}.popup #popupMessage:empty{display:none}
+
+.popup-update{margin:16px 0 0;padding:12px;font-size:12px}.popup-update p{margin:0 0 8px}.popup-update button{margin:0}.update-page{max-width:700px}.update-page p{line-height:1.65}.update-page #progress{white-space:pre-wrap;color:#235c49}.update-page #error{white-space:pre-wrap;color:#9b302b}.update-page a{color:#235c49;margin-left:12px}

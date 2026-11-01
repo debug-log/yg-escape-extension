@@ -1,5 +1,6 @@
 # Local research results, personal rules and backups
 /keyescape-*
+!/keyescape-weekday-fallback-rules.json
 /KEYESCAPE-RULES.md
 /build-keyescape-rules.cjs
 /VALIDATION.md

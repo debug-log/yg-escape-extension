@@ -1,1 +1,59 @@
-<!doctype html><html lang="ko"><meta charset="utf-8"><link rel="stylesheet" href="style.css"><title>YG Escpae Extension</title><body class="popup"><span class="eyebrow">YG Escpae Extension</span><h1>이 사이트의 응답 변경</h1><p id="site"></p><label><input type="checkbox" id="enabled"> 전체 응답 변경 켜기</label><h2 id="state">상태 확인 중…</h2><p id="rule"></p><p id="last"></p><p id="dateUnlockState" role="status"></p><p id="antiDebugState" role="status"></p><button id="manage">설정 변경</button><button id="reload" class="secondary" hidden>페이지 새로고침</button><script src="popup.js"></script></body></html>
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="popup.css">
+  <title>YG Escpae Extension</title>
+</head>
+<body class="popup">
+  <header class="popup-header">
+    <span class="brand"><img src="icons/icon-128.png" width="32" height="32" alt=""><span>YG Escpae</span></span>
+    <button id="manage" class="text-button">규칙 관리</button>
+  </header>
+  <div class="site-heading">
+    <span class="site-caption">현재 사이트</span>
+    <h1 id="site"></h1>
+  </div>
+  <div class="setting-list">
+    <div class="setting-row">
+      <div class="setting-copy">
+        <label for="enabled">응답 변경</label>
+        <p id="state" role="status">확인 중</p>
+      </div>
+      <input class="toggle" type="checkbox" role="switch" id="enabled" aria-describedby="state">
+    </div>
+    <div class="setting-row">
+      <div class="setting-copy">
+        <label for="dateUnlockToggle">날짜 제한 해제</label>
+        <p id="dateUnlockState" role="status"></p>
+      </div>
+      <input class="toggle" type="checkbox" role="switch" id="dateUnlockToggle" aria-describedby="dateUnlockState">
+    </div>
+    <div class="setting-row">
+      <div class="setting-copy">
+        <label for="antiDebugToggle">개발자도구 보호</label>
+        <p id="antiDebugState" role="status"></p>
+      </div>
+      <input class="toggle" type="checkbox" role="switch" id="antiDebugToggle" aria-describedby="antiDebugState">
+    </div>
+  </div>
+  <div class="activity">
+    <p id="rule"></p>
+    <p id="last"></p>
+  </div>
+  <p id="popupMessage" role="status"></p>
+  <button id="reload" class="reload-button" hidden>새로고침하여 적용</button>
+  <footer class="popup-footer">
+    <button id="restoreDefaults" class="text-button" hidden>기본 규칙 복원</button>
+    <div class="popup-update">
+      <p id="updateStatus" role="status"></p>
+      <button id="openUpdater" class="text-button">업데이트</button>
+    </div>
+  </footer>
+  <script src="popup.js"></script>
+  <script src="update-core.js"></script>
+  <script src="update-store.js"></script>
+  <script src="popup-updates.js"></script>
+</body>
+</html>

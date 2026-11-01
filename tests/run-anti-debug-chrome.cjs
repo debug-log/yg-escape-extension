@@ -5,7 +5,8 @@ const assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..');
 const temp=fs.mkdtempSync(path.join(os.tmpdir(),'xre-anti-'));
 const extensionDir=path.join(temp,'extension');fs.mkdirSync(extensionDir);
-for(const file of fs.readdirSync(root))if(/\.(js|html|css|json)$/.test(file)&&!file.startsWith('keyescape-'))fs.copyFileSync(path.join(root,file),path.join(extensionDir,file));
+for(const file of fs.readdirSync(root))if(/\.(js|html|css|json)$/.test(file)&&(!file.startsWith('keyescape-')||file==='keyescape-weekday-fallback-rules.json'))fs.copyFileSync(path.join(root,file),path.join(extensionDir,file));
+fs.cpSync(path.join(root,'icons'),path.join(extensionDir,'icons'),{recursive:true});
 fs.cpSync(path.join(root,'vendor'),path.join(extensionDir,'vendor'),{recursive:true});
 const manifest=JSON.parse(fs.readFileSync(path.join(extensionDir,'manifest.json')));
 manifest.host_permissions=['http://127.0.0.1/*','http://localhost/*'];
@@ -76,9 +77,14 @@ const deadline=setTimeout(()=>{console.error('Chrome integration deadline exceed
  console.log('PASS saved settings restore after browser restart and temporary extension reload');
  await call('Target.activateTarget',{targetId:page.targetId});
  const popup=await tab('chrome-extension://'+extension.id+'/popup.html',true);
- await until(()=>evaluate(popup.sessionId,"document.querySelector('#antiDebugState')?.textContent.includes('설정 반영됨')"),'popup anti-debug state');
+ await until(()=>evaluate(popup.sessionId,"document.querySelector('#antiDebugState')?.textContent.includes('적용 중')"),'popup anti-debug state');
  assert.equal(await evaluate(popup.sessionId,"document.querySelector('#enabled').checked"),false);
- assert.equal(await evaluate(popup.sessionId,"document.querySelector('#antiDebugState').textContent.includes('설정 켜짐')"),true);
+ assert.equal(await evaluate(popup.sessionId,"document.querySelector('#antiDebugState').textContent.includes('적용 중')"),true);
+ await call('Emulation.setDeviceMetricsOverride',{width:352,height:560,deviceScaleFactor:2,mobile:false},popup.sessionId);
+ assert.equal(await evaluate(popup.sessionId,"document.querySelectorAll('input[role=switch]').length"),3);
+ assert.equal(await evaluate(popup.sessionId,"document.documentElement.scrollWidth <= 352"),true);
+ const popupShot=await call('Page.captureScreenshot',{format:'png'},popup.sessionId);
+ fs.writeFileSync('/tmp/xre-popup-design.png',Buffer.from(popupShot.data,'base64'));
  await call('Target.closeTarget',{targetId:popup.targetId});
  console.log('PASS popup reports anti-debug independently of response switch');
  // Same source screenshot is inspectable without affecting the user's Chrome profile.
