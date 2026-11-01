@@ -1,0 +1,11 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const E=require('../engine.js');
+const rule={enabled:true,url:'run_proc.php',match:'contains',method:'ANY',conditions:[{path:'status',op:'equals',value:true}],action:'patch',patches:[{path:'data[*].enable',value:'Y'}]};
+const original={status:true,data:[{enable:'N',num:1},{enable:'N',num:2}]};
+test('wildcard patch preserves original and other fields',()=>{const out=E.transform(original,[rule],'/run_proc.php','GET');assert.equal(out.value.data[0].enable,'Y');assert.equal(out.value.data[1].num,2);assert.equal(original.data[0].enable,'N');});
+test('nonmatching conditions, URL and method pass through',()=>{for(const [body,url,method,r] of [[{status:false},'/run_proc.php','GET',rule],[original,'/other','GET',rule],[original,'/run_proc.php','GET',{...rule,method:'POST'}]])assert.equal(E.transform(body,[r],url,method).matched,false);});
+test('first match only and whole replacement',()=>{assert.deepEqual(E.transform(original,[{...rule,action:'replace',replacement:{ok:1}},rule],'/run_proc.php','GET').value,{ok:1});});
+test('missing paths never created and existence recognizes null',()=>{assert.equal(E.select({a:null},'a').length,1);assert.equal(E.select({},'a').length,0);assert.deepEqual(E.transform(original,[{...rule,patches:[{path:'missing.x',value:1}]}],'/run_proc.php','GET').value,original);});
+test('unsafe and malformed paths rejected',()=>{for(const path of ['__proto__.x','a.constructor','a..b','a[foo]'])assert.throws(()=>E.tokens(path));});
+test('object equality ignores key order',()=>assert.equal(E.equal({a:1,b:2},{b:2,a:1}),true));

@@ -1,0 +1,17 @@
+# Local research results, personal rules and backups
+/keyescape-*
+/KEYESCAPE-RULES.md
+/build-keyescape-rules.cjs
+/VALIDATION.md
+
+# Local environments and generated output
+.DS_Store
+.env
+.env.*
+*.pem
+*.key
+node_modules/
+dist/
+*.zip
+*.crx
+*.log
