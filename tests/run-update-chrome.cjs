@@ -57,8 +57,12 @@ const deadline=setTimeout(()=>{console.error('Updater integration deadline excee
  if(!executable)throw Error('Chrome not found; set CHROME_PATH');
  child=spawn(executable,['--headless','--no-first-run','--disable-background-networking','--enable-unsafe-extension-debugging','--remote-debugging-port=0','--user-data-dir='+path.join(temp,'profile')],{stdio:'ignore',windowsHide:true});
  const portFile=path.join(temp,'profile','DevToolsActivePort');
- await until(()=>fs.existsSync(portFile),'Chrome debugging port');
- const [port,endpoint]=fs.readFileSync(portFile,'utf8').trim().split(/\r?\n/);
+ const [port,endpoint]=await until(()=>{
+  try{
+   const parts=fs.readFileSync(portFile,'utf8').trim().split(/\r?\n/);
+   return /^\d+$/.test(parts[0])&&parts[1]?.startsWith('/devtools/browser/')?parts:false;
+  }catch(error){if(['ENOENT','EBUSY','EACCES'].includes(error.code))return false;throw error;}
+ },'readable Chrome debugging port');
  socket=new WebSocket(`ws://127.0.0.1:${port}${endpoint}`);
  await new Promise((resolve,reject)=>{socket.onopen=resolve;socket.onerror=reject;});
  socket.onmessage=event=>{const m=JSON.parse(event.data);
