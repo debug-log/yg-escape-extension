@@ -33,7 +33,7 @@
   if(root.XRPlay33)return;
 
   const keys=['branch','theme','date','time'];
-  let active=false,host=null,form=null,inputs=null,original=null,lastApplied=null;
+  let active=false,host=null,form=null,inputs=null,original=null,lastApplied=null,opening=null;
   const eligible=()=>window===window.top&&location.origin==='https://play33.kr'&&location.pathname==='/reservation/create';
   const read=()=>Object.fromEntries(keys.map(k=>[k,inputs[k].value]));
   function write(values){
@@ -43,12 +43,14 @@
   }
   function stop(){
     active=false;observer.disconnect();
+    opening?.dispose();opening=null;
     if(inputs&&lastApplied&&keys.every(k=>inputs[k].value===lastApplied[k]))write(original);
     host?.remove();host=form=inputs=original=lastApplied=null;
   }
   function scan(){
     if(!active||!eligible())return;
     if(host?.isConnected&&form?.isConnected&&keys.every(k=>form.contains(inputs[k])))return;
+    opening?.dispose();opening=null;
     host?.remove();host=form=inputs=original=lastApplied=null;
     for(const candidate of document.forms){
       const fields=Object.fromEntries(keys.map(k=>[k,candidate.querySelector(`input[type="hidden"][name="${k}"]`)]));
@@ -74,9 +76,16 @@
       <header><h2>예약 선택 변경</h2><button type="button" id="restore">원래 값으로</button></header>
       <div class="fields"><label>지점<select id="branch"></select></label><label>테마<select id="theme"></select></label><label>날짜<input id="date" type="date"></label><label>시간<select id="time"></select></label></div>
       <p class="status" role="status" id="status"></p><output id="values"></output>
-      <p class="note">2026.11.02~08 조사 시간표 · 공휴일·실시간 잔여석 미반영<br>선택하면 예약 전송값이 바뀝니다. 페이지의 인원·요금·안내는 원래 테마 기준입니다.</p>
+      <p class="note">시간표는 2026년 11월 2~8일에 확인한 정보입니다. 공휴일 운영 시간이나 현재 남은 자리는 반영하지 않아 실제 예약 가능 여부와 다를 수 있습니다.<br>지점이나 테마를 바꿔도 이 페이지의 인원·요금·안내는 처음 선택한 테마 기준으로 표시됩니다.</p>
     </section>`;
     const ui=Object.fromEntries([...keys,'status','values','restore'].map(k=>[k,shadow.getElementById(k)]));
+    if(root.XROpeningUI){
+      opening=root.XROpeningUI.create(()=>({site:'play33',branch:ui.branch.value,date:ui.date.value,
+        rule:root.XROpening.rule('play33',ui.branch.value)}),date=>{
+        ui.date.value=date;hours(ui.time.value);apply();
+      });
+      shadow.querySelector('.fields').after(opening.host);
+    }
     function options(select,items,preferred,keepUnknown=false){
       select.replaceChildren(...items.map(([value,label])=>new Option(label,value)));
       if(keepUnknown&&preferred&&!items.some(([v])=>v===preferred))select.add(new Option(`${preferred} (현재 값)`,preferred));
@@ -88,28 +97,29 @@
     function hours(preferred,keepUnknown=false){
       options(ui.time,times(ui.branch.value,ui.theme.value,ui.date.value).map(t=>[t,t]),preferred,keepUnknown);
     }
-    function showValues(){ui.values.textContent=keys.map(k=>`${k}=${inputs[k].value}`).join(' · ');}
+    function showValues(){ui.values.textContent='선택한 지점·테마·날짜·시간으로 예약을 요청합니다. 아직 예약이 완료된 것은 아닙니다.';opening?.render();}
     function reset(){
       options(ui.branch,branches.map(b=>[b.id,b.name]),original.branch,true);
       themes(original.theme,true);ui.date.value=original.date;hours(original.time,true);
-      ui.status.textContent='현재 예약값을 불러왔습니다.';showValues();
+      ui.status.textContent='현재 예약 정보를 불러왔습니다.';showValues();
     }
     function apply(){
+      opening?.render();
       if(!form.isConnected||!keys.every(k=>form.contains(inputs[k]))){ui.status.textContent='예약 폼이 바뀌었습니다. 페이지를 다시 확인해주세요.';return;}
       const selected=Object.fromEntries(keys.map(k=>[k,ui[k].value]));
       if(!times(selected.branch,selected.theme,selected.date).includes(selected.time)){
         ui.status.textContent='지점·테마·날짜·시간을 모두 선택해주세요. 기존 예약값은 유지됩니다.';return;
       }
       write(selected);lastApplied=selected;
-      const day=dayOfWeek(selected.date),kind=day===0?'일요일':day===6?'토요일':day===5?'금요일':'평일 (월~목)';
-      ui.status.textContent=`${ui.branch.selectedOptions[0].textContent} · ${ui.theme.selectedOptions[0].textContent} · ${selected.date} ${selected.time} 반영됨 / ${kind}`;
+      const day=['일','월','화','수','목','금','토'][dayOfWeek(selected.date)];
+      ui.status.textContent=`선택한 예약 정보: ${ui.branch.selectedOptions[0].textContent} · ${ui.theme.selectedOptions[0].textContent} · ${selected.date} (${day}) ${selected.time}`;
       showValues();
     }
     ui.branch.addEventListener('change',()=>{themes(ui.theme.value);hours(ui.time.value);apply();});
     ui.theme.addEventListener('change',()=>{hours(ui.time.value);apply();});
     ui.date.addEventListener('change',()=>{hours(ui.time.value);apply();});
     ui.time.addEventListener('change',apply);
-    ui.restore.addEventListener('click',()=>{write(original);lastApplied=null;reset();ui.status.textContent='원래 예약값으로 되돌렸습니다.';});
+    ui.restore.addEventListener('click',()=>{write(original);lastApplied=null;reset();ui.status.textContent='처음 선택한 예약 정보로 되돌렸습니다.';});
     reset();
     form.prepend(host);
   }

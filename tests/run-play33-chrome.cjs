@@ -49,6 +49,13 @@ const fixture=`<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  const values=()=>ev("Object.fromEntries(new FormData(document.forms[0]))");
  async function change(key,value){return ev(`(()=>{const el=${panel}.getElementById(${JSON.stringify(key)});el.value=${JSON.stringify(value)};el.dispatchEvent(new Event('change',{bubbles:true}));})()`);}
  await until(()=>ev("!!document.querySelector('#xr-play33-panel')"),'panel installed');
+ await until(()=>ev(`${panel}.querySelector('xr-opening-card')?.shadowRoot?.querySelector('#headline')`),'opening card installed');
+ await change('date','2027-01-15');
+ assert.match(await ev(`${panel}.querySelector('xr-opening-card').shadowRoot.textContent`),/2027-01-08 20:00/);
+ await change('branch','7');
+ assert.match(await ev(`${panel}.querySelector('xr-opening-card').shadowRoot.textContent`),/2027-01-08 22:00/);
+ await ev(`${panel}.getElementById('restore').click()`);
+ await ev('changes=[]');
  const original=await values();
  assert.equal(await ev(`${panel}.getElementById('theme').value`),'47');
  assert.equal(await ev('changes.length'),0,'initial mounting must not change the form');
@@ -88,7 +95,10 @@ const fixture=`<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  assert.equal(await ev("!!frames[0].document.querySelector('#xr-play33-panel')"),false);
  const other=await fixtureTab('https://play33.kr/reservation');
  assert.equal(await evaluate(other.sessionId,"!!document.querySelector('#xr-play33-panel')"),false);
+ await evaluate(other.sessionId,`document.body.innerHTML='<form><select name="branch"><option value="7">수원점</option></select><input name="date" value="2027-01-15"></form><input id="reservation_range_day" value="8"><input id="reservation_range_open_time" value="18:30:00">'`);
+ await until(()=>evaluate(other.sessionId,"document.querySelector('xr-opening-card')?.shadowRoot.textContent.includes('2027-01-07 18:30')"),'listing reads current official settings');
  await save([]);await until(()=>ev("!document.querySelector('#xr-play33-panel')"),'remove site');assert.deepEqual(await values(),original);
+ assert.equal(await evaluate(other.sessionId,"document.querySelectorAll('xr-opening-card').length"),0);
  await call('Target.activateTarget',{targetId:page.targetId});
  const popup=await tab('chrome-extension://'+extension.id+'/popup.html',true);
  await until(()=>evaluate(popup.sessionId,"document.querySelector('#addCurrentSite')?.disabled === false"),'quick registration available');

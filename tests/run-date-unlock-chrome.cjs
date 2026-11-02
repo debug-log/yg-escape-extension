@@ -24,7 +24,7 @@ function startChrome(){
 async function stopChrome(){const exited=new Promise(resolve=>child.once('exit',resolve));await call('Browser.close').catch(()=>child.kill());await exited;}
 const deadline=setTimeout(()=>{console.error('Chrome integration deadline exceeded');child?.kill();process.exit(1);},90000);
 
-const fixture='<!doctype html><title>Date fixture</title><select id="theme"><option>A</option><option>B</option></select><table><tr><td id="date" class="selDate sun disabled endDay" data-date="2026-11-08">8</td><td id="past" title="original hint" style="outline: 1px solid blue; outline-offset: 1px" class="selDate disabled" data-date="2020-01-01">1</td><td id="native" class="selDate available" data-date="2026-11-09">9</td><td id="empty" class="selDate disabled">empty</td></tr></table><button class="disabled" id="button">Other</button>';
+const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Date fixture</title><style>body{font:16px sans-serif;margin:20px}.reservationPick{max-width:500px}table{width:100%;text-align:center}td{padding:12px}#datepicker{padding:20px;border:1px solid #ddd;border-radius:10px}</style><select id="zizum"><option value="31">백산방역</option><option value="26">에버랜드</option></select><select id="theme"><option value="84" data-doing="3">A</option><option value="34" data-doing="7">B</option></select><div class="reservationPick"><div id="datepicker"><table><tr><td id="date" class="selDate sun disabled endDay" data-date="2026-11-08">8</td><td id="past" title="original hint" style="outline: 1px solid blue; outline-offset: 1px" class="selDate disabled" data-date="2020-01-01">1</td><td id="native" class="selDate available" data-date="2026-11-09">9</td><td id="empty" class="selDate disabled">empty</td></tr></table></div></div><button class="disabled" id="button">Other</button>';
 (async()=>{try{
  startChrome();
  const extension=await call('Extensions.loadUnpacked',{path:extensionDir});
@@ -40,12 +40,35 @@ const fixture='<!doctype html><title>Date fixture</title><select id="theme"><opt
  const ev=expression=>evaluate(page.sessionId,expression);
  async function state(){return evaluate(options.sessionId,`(async()=>{const tabs=await chrome.tabs.query({});const t=tabs.find(t=>t.url===${JSON.stringify(page.url)});return chrome.tabs.sendMessage(t.id,{type:'state'},{frameId:0});})()`);}
  await until(()=>ev("document.querySelector('#date').classList.contains('available')"),'date opens by default');
+ await until(()=>ev("document.querySelector('#past').dataset.xrOpening==='past'"),'opening badges independent of unlock');
+ const card="document.querySelector('xr-opening-card').shadowRoot";
+ assert.equal(await ev("document.querySelector('#past').classList.contains('available')"),true,'unlocked does not mean open');
+ await ev("document.querySelector('#date').click()");
+ assert.match(await ev(`${card}.getElementById('when').textContent`),/2026-11-06 09:30/);
+ await ev("document.querySelector('#theme').selectedIndex=1;document.querySelector('#theme').dispatchEvent(new Event('change',{bubbles:true}));document.querySelector('#date').click()");
+ assert.match(await ev(`${card}.getElementById('when').textContent`),/2026-11-02 09:30/,'current theme calendar span used');
+ await ev("document.querySelector('#zizum').value='26';document.querySelector('#zizum').dispatchEvent(new Event('change',{bubbles:true}));document.querySelector('#date').click()");
+ assert.equal(await ev(`${card}.getElementById('headline').textContent`),'오픈 일정 확인 필요');
+ await ev("document.querySelector('#zizum').value='31';document.querySelector('#theme').selectedIndex=0;document.querySelector('#zizum').dispatchEvent(new Event('change',{bubbles:true}))");
+ await ev(`${card}.getElementById('upcoming').click()`);
+ assert.ok(await ev(`${card}.getElementById('count').textContent`));
+ await ev("document.querySelector('#date').classList.add('selected')");
+ assert.equal(await ev("getComputedStyle(document.querySelector('#date')).outlineStyle"),'solid','selection remains visible with opening badges');
+ await ev("document.querySelector('#date').classList.remove('selected')");
+ const keyShot=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:true},page.sessionId);
+ fs.writeFileSync(path.join(os.tmpdir(),'xre-opening-keyescape.png'),Buffer.from(keyShot.data,'base64'));
+ await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true},page.sessionId);
+ assert.equal(await ev('document.documentElement.scrollWidth<=innerWidth'),true);
+ await call('Emulation.clearDeviceMetricsOverride',{},page.sessionId);
  assert.equal(await ev("document.querySelector('#date').className"),'selDate sun endDay available');
  assert.equal(await ev("document.querySelector('#past').classList.contains('available')"),true);
  assert.equal(await ev("document.querySelector('#empty').classList.contains('disabled')&&document.querySelector('#button').classList.contains('disabled')"),true);
  assert.equal((await state()).enabled,false);assert.equal((await state()).dateUnlock.active,true);
  await ev(`document.querySelector('tr').insertAdjacentHTML('beforeend','<td id="next" class="selDate disabled" data-date="2026-12-01">1</td>')`);
  await until(()=>ev("document.querySelector('#next').classList.contains('available')"),'month rerender');
+ await until(()=>ev("document.querySelector('#next .xr-opening-badge')?.textContent==='오픈 예정'"),'new month annotated');
+ await ev("document.querySelector('#next').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))");
+ assert.match(await ev(`${card}.getElementById('when').textContent`),/2026-11-29 09:30/);
  await ev("document.querySelector('#next').className='selDate disabled'");
  await until(()=>ev("document.querySelector('#next').classList.contains('available')"),'class reset');
  const count=(await state()).dateUnlock.count;await ev('new Promise(r=>setTimeout(r,100))');assert.equal((await state()).dateUnlock.count,count);
@@ -95,6 +118,8 @@ const fixture='<!doctype html><title>Date fixture</title><select id="theme"><opt
  fs.writeFileSync(path.join(os.tmpdir(),'xre-popup-settings.png'),Buffer.from(shot.data,'base64'));
  await call('Target.closeTarget',{targetId:popup.targetId});
  await save({sites:[]});await until(async()=>(await state()).dateUnlock.active===false,'site removal');
+ assert.equal(await ev("document.querySelectorAll('xr-opening-card,.xr-opening-badge,[data-xr-opening]').length"),0);
+ assert.equal(await ev("document.querySelector('#date').hasAttribute('tabindex')"),false);
  await ev("document.querySelector('#date').className='selDate disabled'");await ev('new Promise(r=>setTimeout(r,100))');
  assert.equal(await ev("document.querySelector('#date').classList.contains('disabled')"),true);
  const unregistered=await fixtureTab('https://keyescape.com/reservation1.php?unregistered=1');

@@ -77,7 +77,7 @@ async function sync() {
   const matches = allowed.map(site => site + '/*');
   const scripts = [
     {id: 'xr-main', matches, js: ['engine.js', 'hook.js'], runAt: 'document_start', world: 'MAIN', allFrames: false},
-    {id: 'xr-bridge', matches, js: ['date-unlock.js', 'play33.js', 'bridge.js'], runAt: 'document_start', world: 'ISOLATED', allFrames: true},
+    {id: 'xr-bridge', matches, js: ['date-unlock.js', 'opening.js', 'opening-ui.js', 'play33.js', 'bridge.js'], runAt: 'document_start', world: 'ISOLATED', allFrames: true},
     {id: 'xr-anti-main', matches, js: ['vendor/acorn.js', 'anti-debug.js'], runAt: 'document_start', world: 'MAIN', allFrames: true}
   ];
   const existing = new Set(current.map(script => script.id));

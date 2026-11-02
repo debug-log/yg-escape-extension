@@ -37,7 +37,7 @@ test('revoked host permission clears site exception and all registrations',async
 test('date script is available before bridge configuration in isolated world',async()=>{
  const f=fixture();await f.send({type:'sync'});
  const bridge=f.get().registered.find(s=>s.id==='xr-bridge');
- assert.deepEqual(Array.from(bridge.js),['date-unlock.js','play33.js','bridge.js']);
+ assert.deepEqual(Array.from(bridge.js),['date-unlock.js','opening.js','opening-ui.js','play33.js','bridge.js']);
 });
 
 test('missing defaults are seeded once without losing existing rules or global switch',async()=>{

@@ -11,7 +11,7 @@ FILES = (
     'popup.css', 'icons/icon-16.png', 'icons/icon-32.png',
     'icons/icon-48.png', 'icons/icon-128.png',
     'manifest.json', 'background.js', 'settings.js', 'engine.js', 'hook.js',
-    'bridge.js', 'date-unlock.js', 'play33.js', 'anti-debug.js', 'ux.js', 'options.js',
+    'bridge.js', 'date-unlock.js', 'opening.js', 'opening-ui.js', 'play33.js', 'anti-debug.js', 'ux.js', 'options.js',
     'options.html', 'popup.js', 'popup.html', 'style.css', 'popup-updates.js',
     'update-core.js', 'update-store.js', 'update.js', 'update-report.js', 'update.html',
     'keyescape-weekday-fallback-rules.json', 'vendor/acorn.js',
