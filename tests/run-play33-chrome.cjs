@@ -81,6 +81,7 @@ const fixture=`<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  await until(()=>ev("!!document.forms[0]"),'disabled page reloaded');
  assert.equal(await ev("!!document.querySelector('#xr-play33-panel')"),false);
  assert.equal(await evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config.play33Enabled)"),false);
+ await until(()=>evaluate(options.sessionId,"document.querySelector('#play33Toggle').disabled===false"),'toggle save completes');
  await evaluate(options.sessionId,"document.querySelector('#play33Toggle').click()",true);
  await until(()=>ev("!!document.querySelector('#xr-play33-panel')"),'toggle restores panel');
  await change('branch','7');
