@@ -1617,6 +1617,197 @@
               }
             ]
           }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 2537,
+                "gubun": "D",
+                "theme_num": 71,
+                "hh": "09",
+                "mm": "55",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2538,
+                "gubun": "D",
+                "theme_num": 71,
+                "hh": "10",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2539,
+                "gubun": "D",
+                "theme_num": 71,
+                "hh": "11",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2540,
+                "gubun": "D",
+                "theme_num": 71,
+                "hh": "12",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2541,
+                "gubun": "D",
+                "theme_num": 71,
+                "hh": "13",
+                "mm": "35",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2542,
+                "gubun": "D",
+                "theme_num": 71,
+                "hh": "14",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2543,
+                "gubun": "D",
+                "theme_num": 71,
+                "hh": "15",
+                "mm": "25",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2544,
+                "gubun": "D",
+                "theme_num": 71,
+                "hh": "16",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2545,
+                "gubun": "D",
+                "theme_num": 71,
+                "hh": "17",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2546,
+                "gubun": "D",
+                "theme_num": 71,
+                "hh": "18",
+                "mm": "10",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2547,
+                "gubun": "D",
+                "theme_num": 71,
+                "hh": "19",
+                "mm": "05",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2548,
+                "gubun": "D",
+                "theme_num": 71,
+                "hh": "20",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2549,
+                "gubun": "D",
+                "theme_num": 71,
+                "hh": "20",
+                "mm": "55",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2550,
+                "gubun": "D",
+                "theme_num": 71,
+                "hh": "21",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
         }
       ]
     },
@@ -2791,6 +2982,197 @@
                 "sale_price": 0,
                 "sale_doc": "조조",
                 "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 2858,
+                "gubun": "D",
+                "theme_num": 69,
+                "hh": "09",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2859,
+                "gubun": "D",
+                "theme_num": 69,
+                "hh": "10",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2860,
+                "gubun": "D",
+                "theme_num": 69,
+                "hh": "11",
+                "mm": "35",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2861,
+                "gubun": "D",
+                "theme_num": 69,
+                "hh": "12",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2862,
+                "gubun": "D",
+                "theme_num": 69,
+                "hh": "13",
+                "mm": "25",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2863,
+                "gubun": "D",
+                "theme_num": 69,
+                "hh": "14",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2864,
+                "gubun": "D",
+                "theme_num": 69,
+                "hh": "15",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2865,
+                "gubun": "D",
+                "theme_num": 69,
+                "hh": "16",
+                "mm": "10",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2866,
+                "gubun": "D",
+                "theme_num": 69,
+                "hh": "17",
+                "mm": "05",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2867,
+                "gubun": "D",
+                "theme_num": 69,
+                "hh": "18",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2868,
+                "gubun": "D",
+                "theme_num": 69,
+                "hh": "18",
+                "mm": "55",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2869,
+                "gubun": "D",
+                "theme_num": 69,
+                "hh": "19",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2870,
+                "gubun": "D",
+                "theme_num": 69,
+                "hh": "20",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2871,
+                "gubun": "D",
+                "theme_num": 69,
+                "hh": "21",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
                 "sale_one": "N",
                 "sale_txt": ""
               }
@@ -3975,6 +4357,197 @@
               }
             ]
           }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 3152,
+                "gubun": "D",
+                "theme_num": 70,
+                "hh": "09",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2934,
+                "gubun": "D",
+                "theme_num": 70,
+                "hh": "10",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2936,
+                "gubun": "D",
+                "theme_num": 70,
+                "hh": "11",
+                "mm": "35",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3131,
+                "gubun": "D",
+                "theme_num": 70,
+                "hh": "12",
+                "mm": "10",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2937,
+                "gubun": "D",
+                "theme_num": 70,
+                "hh": "13",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2939,
+                "gubun": "D",
+                "theme_num": 70,
+                "hh": "14",
+                "mm": "05",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3153,
+                "gubun": "D",
+                "theme_num": 70,
+                "hh": "15",
+                "mm": "25",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2940,
+                "gubun": "D",
+                "theme_num": 70,
+                "hh": "16",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2942,
+                "gubun": "D",
+                "theme_num": 70,
+                "hh": "17",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3132,
+                "gubun": "D",
+                "theme_num": 70,
+                "hh": "17",
+                "mm": "55",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2945,
+                "gubun": "D",
+                "theme_num": 70,
+                "hh": "19",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3154,
+                "gubun": "D",
+                "theme_num": 70,
+                "hh": "19",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2946,
+                "gubun": "D",
+                "theme_num": 70,
+                "hh": "21",
+                "mm": "10",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3155,
+                "gubun": "D",
+                "theme_num": 70,
+                "hh": "21",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
         }
       ]
     },
@@ -5071,6 +5644,184 @@
                 "sale_price": 0,
                 "sale_doc": "조조",
                 "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 2256,
+                "gubun": "D",
+                "theme_num": 65,
+                "hh": "09",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2297,
+                "gubun": "D",
+                "theme_num": 65,
+                "hh": "10",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2259,
+                "gubun": "D",
+                "theme_num": 65,
+                "hh": "11",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2261,
+                "gubun": "D",
+                "theme_num": 65,
+                "hh": "12",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2298,
+                "gubun": "D",
+                "theme_num": 65,
+                "hh": "13",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2262,
+                "gubun": "D",
+                "theme_num": 65,
+                "hh": "14",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2263,
+                "gubun": "D",
+                "theme_num": 65,
+                "hh": "15",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2299,
+                "gubun": "D",
+                "theme_num": 65,
+                "hh": "16",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2264,
+                "gubun": "D",
+                "theme_num": 65,
+                "hh": "17",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2265,
+                "gubun": "D",
+                "theme_num": 65,
+                "hh": "18",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2300,
+                "gubun": "D",
+                "theme_num": 65,
+                "hh": "19",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2266,
+                "gubun": "D",
+                "theme_num": 65,
+                "hh": "20",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2301,
+                "gubun": "D",
+                "theme_num": 65,
+                "hh": "21",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
                 "sale_one": "N",
                 "sale_txt": ""
               }
@@ -6489,6 +7240,236 @@
               }
             ]
           }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 2360,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "09",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2361,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "10",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2362,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "11",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2363,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "12",
+                "mm": "05",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2364,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "12",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2365,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "13",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2335,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "14",
+                "mm": "25",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2336,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "15",
+                "mm": "10",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2366,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "16",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2367,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "16",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2337,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "17",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2368,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "18",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2369,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "19",
+                "mm": "05",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2370,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "19",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2371,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "20",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2372,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "21",
+                "mm": "25",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2373,
+                "gubun": "D",
+                "theme_num": 66,
+                "hh": "22",
+                "mm": "10",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
         }
       ]
     },
@@ -7824,6 +8805,223 @@
               }
             ]
           }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 2464,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "09",
+                "mm": "35",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2465,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "10",
+                "mm": "25",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2466,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "11",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2467,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "12",
+                "mm": "05",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2468,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "12",
+                "mm": "55",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2469,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "13",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2470,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "14",
+                "mm": "35",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2471,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "15",
+                "mm": "25",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2472,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "16",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2473,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "17",
+                "mm": "05",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2474,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "17",
+                "mm": "55",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2475,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "18",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2476,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "19",
+                "mm": "35",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2477,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "20",
+                "mm": "25",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2478,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "21",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2479,
+                "gubun": "D",
+                "theme_num": 67,
+                "hh": "22",
+                "mm": "05",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
         }
       ]
     },
@@ -8757,6 +9955,158 @@
               {
                 "num": 2089,
                 "gubun": "C",
+                "theme_num": 63,
+                "hh": "22",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 2090,
+                "gubun": "D",
+                "theme_num": 63,
+                "hh": "09",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2091,
+                "gubun": "D",
+                "theme_num": 63,
+                "hh": "10",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2092,
+                "gubun": "D",
+                "theme_num": 63,
+                "hh": "12",
+                "mm": "10",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2093,
+                "gubun": "D",
+                "theme_num": 63,
+                "hh": "13",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2094,
+                "gubun": "D",
+                "theme_num": 63,
+                "hh": "14",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2095,
+                "gubun": "D",
+                "theme_num": 63,
+                "hh": "16",
+                "mm": "10",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2096,
+                "gubun": "D",
+                "theme_num": 63,
+                "hh": "17",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2097,
+                "gubun": "D",
+                "theme_num": 63,
+                "hh": "18",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2098,
+                "gubun": "D",
+                "theme_num": 63,
+                "hh": "20",
+                "mm": "10",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2099,
+                "gubun": "D",
+                "theme_num": 63,
+                "hh": "21",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2100,
+                "gubun": "D",
                 "theme_num": 63,
                 "hh": "22",
                 "mm": "45",
@@ -9714,6 +11064,158 @@
               }
             ]
           }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 1902,
+                "gubun": "D",
+                "theme_num": 60,
+                "hh": "09",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1903,
+                "gubun": "D",
+                "theme_num": 60,
+                "hh": "10",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1904,
+                "gubun": "D",
+                "theme_num": 60,
+                "hh": "12",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1905,
+                "gubun": "D",
+                "theme_num": 60,
+                "hh": "13",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1906,
+                "gubun": "D",
+                "theme_num": 60,
+                "hh": "14",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1907,
+                "gubun": "D",
+                "theme_num": 60,
+                "hh": "16",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1908,
+                "gubun": "D",
+                "theme_num": 60,
+                "hh": "17",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1909,
+                "gubun": "D",
+                "theme_num": 60,
+                "hh": "18",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1910,
+                "gubun": "D",
+                "theme_num": 60,
+                "hh": "20",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1911,
+                "gubun": "D",
+                "theme_num": 60,
+                "hh": "21",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1981,
+                "gubun": "D",
+                "theme_num": 60,
+                "hh": "22",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
         }
       ]
     },
@@ -10342,6 +11844,106 @@
                 "sale_price": 0,
                 "sale_doc": "조조",
                 "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 3499,
+                "gubun": "D",
+                "theme_num": 95,
+                "hh": "09",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3500,
+                "gubun": "D",
+                "theme_num": 95,
+                "hh": "11",
+                "mm": "35",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3501,
+                "gubun": "D",
+                "theme_num": 95,
+                "hh": "13",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3502,
+                "gubun": "D",
+                "theme_num": 95,
+                "hh": "15",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3503,
+                "gubun": "D",
+                "theme_num": 95,
+                "hh": "17",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3504,
+                "gubun": "D",
+                "theme_num": 95,
+                "hh": "19",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3505,
+                "gubun": "D",
+                "theme_num": 95,
+                "hh": "21",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
                 "sale_one": "N",
                 "sale_txt": ""
               }
@@ -11124,6 +12726,132 @@
               {
                 "num": 2146,
                 "gubun": "C",
+                "theme_num": 64,
+                "hh": "21",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 2147,
+                "gubun": "D",
+                "theme_num": 64,
+                "hh": "09",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2148,
+                "gubun": "D",
+                "theme_num": 64,
+                "hh": "11",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2149,
+                "gubun": "D",
+                "theme_num": 64,
+                "hh": "12",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2150,
+                "gubun": "D",
+                "theme_num": 64,
+                "hh": "14",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2151,
+                "gubun": "D",
+                "theme_num": 64,
+                "hh": "15",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2153,
+                "gubun": "D",
+                "theme_num": 64,
+                "hh": "17",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2154,
+                "gubun": "D",
+                "theme_num": 64,
+                "hh": "18",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2155,
+                "gubun": "D",
+                "theme_num": 64,
+                "hh": "20",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2156,
+                "gubun": "D",
                 "theme_num": 64,
                 "hh": "21",
                 "mm": "50",
@@ -12315,6 +14043,197 @@
               }
             ]
           }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 1954,
+                "gubun": "D",
+                "theme_num": 61,
+                "hh": "10",
+                "mm": "05",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1955,
+                "gubun": "D",
+                "theme_num": 61,
+                "hh": "11",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1956,
+                "gubun": "D",
+                "theme_num": 61,
+                "hh": "11",
+                "mm": "55",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1957,
+                "gubun": "D",
+                "theme_num": 61,
+                "hh": "12",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1958,
+                "gubun": "D",
+                "theme_num": 61,
+                "hh": "13",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1959,
+                "gubun": "D",
+                "theme_num": 61,
+                "hh": "14",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1960,
+                "gubun": "D",
+                "theme_num": 61,
+                "hh": "15",
+                "mm": "35",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1961,
+                "gubun": "D",
+                "theme_num": 61,
+                "hh": "16",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1962,
+                "gubun": "D",
+                "theme_num": 61,
+                "hh": "17",
+                "mm": "25",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1963,
+                "gubun": "D",
+                "theme_num": 61,
+                "hh": "18",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1964,
+                "gubun": "D",
+                "theme_num": 61,
+                "hh": "19",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1965,
+                "gubun": "D",
+                "theme_num": 61,
+                "hh": "20",
+                "mm": "10",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1966,
+                "gubun": "D",
+                "theme_num": 61,
+                "hh": "21",
+                "mm": "05",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1967,
+                "gubun": "D",
+                "theme_num": 61,
+                "hh": "22",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
         }
       ]
     },
@@ -13099,6 +15018,132 @@
                 "sale_price": 0,
                 "sale_doc": "조조",
                 "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 2108,
+                "gubun": "D",
+                "theme_num": 57,
+                "hh": "09",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1819,
+                "gubun": "D",
+                "theme_num": 57,
+                "hh": "10",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1820,
+                "gubun": "D",
+                "theme_num": 57,
+                "hh": "12",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1821,
+                "gubun": "D",
+                "theme_num": 57,
+                "hh": "13",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1822,
+                "gubun": "D",
+                "theme_num": 57,
+                "hh": "15",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1823,
+                "gubun": "D",
+                "theme_num": 57,
+                "hh": "16",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1824,
+                "gubun": "D",
+                "theme_num": 57,
+                "hh": "18",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1825,
+                "gubun": "D",
+                "theme_num": 57,
+                "hh": "19",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1826,
+                "gubun": "D",
+                "theme_num": 57,
+                "hh": "21",
+                "mm": "25",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
                 "sale_one": "N",
                 "sale_txt": ""
               }
@@ -14205,6 +16250,184 @@
               }
             ]
           }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 2306,
+                "gubun": "D",
+                "theme_num": 58,
+                "hh": "09",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2046,
+                "gubun": "D",
+                "theme_num": 58,
+                "hh": "10",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1862,
+                "gubun": "D",
+                "theme_num": 58,
+                "hh": "11",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1863,
+                "gubun": "D",
+                "theme_num": 58,
+                "hh": "12",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1864,
+                "gubun": "D",
+                "theme_num": 58,
+                "hh": "13",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1865,
+                "gubun": "D",
+                "theme_num": 58,
+                "hh": "14",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1866,
+                "gubun": "D",
+                "theme_num": 58,
+                "hh": "15",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1867,
+                "gubun": "D",
+                "theme_num": 58,
+                "hh": "16",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1868,
+                "gubun": "D",
+                "theme_num": 58,
+                "hh": "17",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1869,
+                "gubun": "D",
+                "theme_num": 58,
+                "hh": "18",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1870,
+                "gubun": "D",
+                "theme_num": 58,
+                "hh": "19",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2047,
+                "gubun": "D",
+                "theme_num": 58,
+                "hh": "20",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1871,
+                "gubun": "D",
+                "theme_num": 58,
+                "hh": "21",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
         }
       ]
     },
@@ -15072,6 +17295,145 @@
               }
             ]
           }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 2814,
+                "gubun": "D",
+                "theme_num": 59,
+                "hh": "09",
+                "mm": "10",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2048,
+                "gubun": "D",
+                "theme_num": 59,
+                "hh": "10",
+                "mm": "35",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2049,
+                "gubun": "D",
+                "theme_num": 59,
+                "hh": "12",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2050,
+                "gubun": "D",
+                "theme_num": 59,
+                "hh": "13",
+                "mm": "25",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2051,
+                "gubun": "D",
+                "theme_num": 59,
+                "hh": "14",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2052,
+                "gubun": "D",
+                "theme_num": 59,
+                "hh": "16",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2053,
+                "gubun": "D",
+                "theme_num": 59,
+                "hh": "17",
+                "mm": "45",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2054,
+                "gubun": "D",
+                "theme_num": 59,
+                "hh": "19",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2055,
+                "gubun": "D",
+                "theme_num": 59,
+                "hh": "20",
+                "mm": "40",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 2056,
+                "gubun": "D",
+                "theme_num": 59,
+                "hh": "22",
+                "mm": "05",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
         }
       ]
     },
@@ -15849,6 +18211,132 @@
               {
                 "num": 1772,
                 "gubun": "C",
+                "theme_num": 56,
+                "hh": "22",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 1765,
+                "gubun": "D",
+                "theme_num": 56,
+                "hh": "10",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1750,
+                "gubun": "D",
+                "theme_num": 56,
+                "hh": "11",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1766,
+                "gubun": "D",
+                "theme_num": 56,
+                "hh": "13",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1749,
+                "gubun": "D",
+                "theme_num": 56,
+                "hh": "14",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1751,
+                "gubun": "D",
+                "theme_num": 56,
+                "hh": "16",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1767,
+                "gubun": "D",
+                "theme_num": 56,
+                "hh": "17",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1752,
+                "gubun": "D",
+                "theme_num": 56,
+                "hh": "19",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1748,
+                "gubun": "D",
+                "theme_num": 56,
+                "hh": "20",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1768,
+                "gubun": "D",
                 "theme_num": 56,
                 "hh": "22",
                 "mm": "00",
@@ -16728,6 +19216,145 @@
               }
             ]
           }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 1704,
+                "gubun": "D",
+                "theme_num": 55,
+                "hh": "09",
+                "mm": "55",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1705,
+                "gubun": "D",
+                "theme_num": 55,
+                "hh": "11",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1706,
+                "gubun": "D",
+                "theme_num": 55,
+                "hh": "12",
+                "mm": "35",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1707,
+                "gubun": "D",
+                "theme_num": 55,
+                "hh": "13",
+                "mm": "55",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1708,
+                "gubun": "D",
+                "theme_num": 55,
+                "hh": "15",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1709,
+                "gubun": "D",
+                "theme_num": 55,
+                "hh": "16",
+                "mm": "35",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1711,
+                "gubun": "D",
+                "theme_num": 55,
+                "hh": "17",
+                "mm": "55",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1712,
+                "gubun": "D",
+                "theme_num": 55,
+                "hh": "19",
+                "mm": "15",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1713,
+                "gubun": "D",
+                "theme_num": 55,
+                "hh": "20",
+                "mm": "35",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1714,
+                "gubun": "D",
+                "theme_num": 55,
+                "hh": "21",
+                "mm": "55",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
         }
       ]
     },
@@ -17505,6 +20132,132 @@
               {
                 "num": 1540,
                 "gubun": "C",
+                "theme_num": 51,
+                "hh": "21",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 1541,
+                "gubun": "D",
+                "theme_num": 51,
+                "hh": "09",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1542,
+                "gubun": "D",
+                "theme_num": 51,
+                "hh": "11",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1543,
+                "gubun": "D",
+                "theme_num": 51,
+                "hh": "12",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1544,
+                "gubun": "D",
+                "theme_num": 51,
+                "hh": "14",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1545,
+                "gubun": "D",
+                "theme_num": 51,
+                "hh": "15",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1786,
+                "gubun": "D",
+                "theme_num": 51,
+                "hh": "17",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1546,
+                "gubun": "D",
+                "theme_num": 51,
+                "hh": "18",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1547,
+                "gubun": "D",
+                "theme_num": 51,
+                "hh": "20",
+                "mm": "20",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1548,
+                "gubun": "D",
                 "theme_num": 51,
                 "hh": "21",
                 "mm": "50",
@@ -18301,6 +21054,132 @@
                 "sale_price": 0,
                 "sale_doc": "조조",
                 "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
+        },
+        {
+          "date": "2026-11-08",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 1494,
+                "gubun": "D",
+                "theme_num": 48,
+                "hh": "10",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1495,
+                "gubun": "D",
+                "theme_num": 48,
+                "hh": "11",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1496,
+                "gubun": "D",
+                "theme_num": 48,
+                "hh": "13",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1497,
+                "gubun": "D",
+                "theme_num": 48,
+                "hh": "14",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1498,
+                "gubun": "D",
+                "theme_num": 48,
+                "hh": "16",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1499,
+                "gubun": "D",
+                "theme_num": 48,
+                "hh": "17",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1500,
+                "gubun": "D",
+                "theme_num": 48,
+                "hh": "19",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1785,
+                "gubun": "D",
+                "theme_num": 48,
+                "hh": "20",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "Y",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 1501,
+                "gubun": "D",
+                "theme_num": 48,
+                "hh": "22",
+                "mm": "00",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
                 "sale_one": "N",
                 "sale_txt": ""
               }

@@ -19,15 +19,26 @@ const initial = {
   }]
 };
 let queue = Promise.resolve();
+const KEYESCAPE_DEFAULTS_VERSION = 2;
 
 async function addDefaultRules(config) {
   const response = await fetch(chrome.runtime.getURL('keyescape-weekday-fallback-rules.json'));
   if (!response.ok) throw Error('기본 규칙 파일을 불러오지 못했습니다.');
   const {rules} = await response.json();
   if (!Array.isArray(rules) || rules.length !== 34) throw Error('기본 규칙 파일을 확인해주세요.');
-  const existing = new Set(config.rules.map(rule => rule.id));
-  return {...config, keyescapeDefaultsVersion: 1,
-    rules: [...config.rules, ...rules.filter(rule => !existing.has(rule.id))]};
+  const defaultsById = new Map(rules.map(rule => [rule.id, rule]));
+  const merged = config.rules.map(rule => {
+    const bundled = defaultsById.get(rule.id);
+    if (!bundled) return rule;
+    const samples = rule.samples || [];
+    const dates = new Set(samples.map(sample => sample.date));
+    return {...rule, samples: [...samples,
+      ...bundled.samples.filter(sample => !dates.has(sample.date))]
+      .sort((a, b) => a.date.localeCompare(b.date))};
+  });
+  const existing = new Set(merged.map(rule => rule.id));
+  return {...config, keyescapeDefaultsVersion: KEYESCAPE_DEFAULTS_VERSION,
+    rules: [...merged, ...rules.filter(rule => !existing.has(rule.id))]};
 }
 
 async function sync() {
@@ -38,7 +49,7 @@ async function sync() {
   }
 
   // Seed once on installation/upgrade. Subsequent user deletions stay deleted.
-  if (config.keyescapeDefaultsVersion !== 1) {
+  if (config.keyescapeDefaultsVersion !== KEYESCAPE_DEFAULTS_VERSION) {
     config = await addDefaultRules(config);
     await chrome.storage.local.set({config});
   }

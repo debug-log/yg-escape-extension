@@ -44,7 +44,7 @@ test('missing defaults are seeded once without losing existing rules or global s
  const f=fixture();await f.send({type:'sync'});
  const seeded=f.get().config;
  assert.equal(seeded.rules.filter(r=>r.action==='weekdayFallback').length,34);
- assert.equal(seeded.keyescapeDefaultsVersion,1);
+ assert.equal(seeded.keyescapeDefaultsVersion,2);
  const edited={...seeded.rules[0],name:'my edit',enabled:false};
  const after={...seeded,enabled:false,rules:[edited,{id:'custom',name:'keep me'}]};
  await f.send({type:'save',before:structuredClone(seeded),after});
@@ -53,11 +53,30 @@ test('missing defaults are seeded once without losing existing rules or global s
  assert.equal(f.get().config.rules.length,2,'intentional deletion is not undone every sync');
  assert.equal(f.get().config.rules[0].name,'my edit');
 });
-test('all bundled defaults validate and contain only the 215 verified schedules',()=>{
+test('version 1 defaults gain missing bundled samples without overwriting user edits',async()=>{
+ const defaults=JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8')).rules;
+ const bundled=defaults.find(r=>r.id==='keyescape-weekday-fallback-23-71');
+ const old={...structuredClone(bundled),name:'my AYAKO',enabled:false,
+   samples:bundled.samples.filter(s=>s.date!=='2026-11-08')};
+ old.samples[0].response.data[0].enable='N';
+ const f=fixture();f.setConfig({enabled:false,sites:[],rules:[old,{id:'mine',name:'personal'}],keyescapeDefaultsVersion:1});
+
+ await f.send({type:'sync'});
+
+ const config=f.get().config;
+ const migrated=config.rules.find(r=>r.id===old.id);
+ assert.equal(config.keyescapeDefaultsVersion,2);
+ assert.equal(migrated.name,'my AYAKO');assert.equal(migrated.enabled,false);
+ assert.equal(migrated.samples[0].response.data[0].enable,'N');
+ assert.ok(migrated.samples.some(s=>s.date==='2026-11-08'));
+ assert.equal(migrated.samples.length,bundled.samples.length);
+ assert.ok(config.rules.some(r=>r.id==='mine'));
+});
+test('all bundled defaults validate and contain only the 233 verified schedules',()=>{
  const {rules}=JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8'));
  const engine=require('../engine.js');
  assert.equal(rules.length,34);assert.equal(new Set(rules.map(r=>r.id)).size,34);
- assert.equal(rules.reduce((n,r)=>n+r.samples.length,0),215);
+ assert.equal(rules.reduce((n,r)=>n+r.samples.length,0),233);
  for(const r of rules)engine.validate(r);
 });
 
