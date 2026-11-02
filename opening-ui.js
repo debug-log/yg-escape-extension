@@ -81,9 +81,9 @@
       style=document.createElement('style');style.id='xr-opening-calendar-style';
       style.textContent=`#datepicker .datepicker-ui{height:auto!important}
         #datepicker td[data-xr-opening]{position:relative;vertical-align:middle;padding-top:5px;padding-bottom:5px;opacity:1!important}
-        #datepicker td[data-xr-opening=open]{background-color:#edf7f0!important;color:#195a39!important}
-        #datepicker td[data-xr-opening=next]{box-shadow:inset 0 0 0 2px #c27b26!important;background-color:#fff5e6!important;color:#804807!important}
-        #datepicker td[data-xr-opening=future],#datepicker td[data-xr-opening=past]{color:#777!important}
+        #datepicker td[data-xr-opening=open]:not(.xr-date-unlock-unconfirmed){background-color:#edf7f0!important;color:#195a39!important}
+        #datepicker td[data-xr-opening=next]:not(.xr-date-unlock-unconfirmed){box-shadow:inset 0 0 0 2px #c27b26!important;background-color:#fff5e6!important;color:#804807!important}
+        #datepicker td[data-xr-opening=future]:not(.xr-date-unlock-unconfirmed),#datepicker td[data-xr-opening=past]:not(.xr-date-unlock-unconfirmed){color:#777!important}
         #datepicker td[data-xr-opening].selected{outline:3px solid #233e31;outline-offset:-3px}
         #datepicker td[data-xr-opening]:focus-visible{outline:3px solid #9a5a0c;outline-offset:-3px}
         #datepicker .xr-opening-badge{display:block;pointer-events:none;font:10px/1.5 "Malgun Gothic",sans-serif;white-space:nowrap;letter-spacing:-.3px}

@@ -41,7 +41,8 @@
     return `${hours}시간 ${Math.floor(seconds%3600/60)}분 남음`;
   }
   const stamp=instant=>new Date(instant+KST).toISOString().slice(0,16).replace('T',' ');
-  const api={rule,state,range,remaining,stamp,valid,kstDate};
+  const isOpeningLaterToday=(current,now=Date.now())=>current.phase==='upcoming'&&kstDate(current.opensAt)===kstDate(now);
+  const api={rule,state,range,remaining,stamp,isOpeningLaterToday,valid,kstDate};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   else root.XROpening=api;
 })(globalThis);

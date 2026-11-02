@@ -19,7 +19,7 @@ const initial = {
   }]
 };
 let queue = Promise.resolve();
-const KEYESCAPE_DEFAULTS_VERSION = 2;
+const KEYESCAPE_DEFAULTS_VERSION = 3;
 
 async function addDefaultRules(config) {
   const response = await fetch(chrome.runtime.getURL('keyescape-weekday-fallback-rules.json'));
@@ -32,7 +32,7 @@ async function addDefaultRules(config) {
     if (!bundled) return rule;
     const samples = rule.samples || [];
     const dates = new Set(samples.map(sample => sample.date));
-    return {...rule, samples: [...samples,
+    return {...bundled, ...rule, samples: [...samples,
       ...bundled.samples.filter(sample => !dates.has(sample.date))]
       .sort((a, b) => a.date.localeCompare(b.date))};
   });

@@ -22,6 +22,9 @@
       ],
       "action": "weekdayFallback",
       "dateParam": "date",
+      "weekdayGroups": [
+        [1, 2, 3, 4]
+      ],
       "allowedMessages": [
         "예약가능시간이 아닙니다. 예약오픈시간 : 09:30",
         "예약 가능 한 날짜가 아닙니다.",

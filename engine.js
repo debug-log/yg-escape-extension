@@ -39,6 +39,7 @@
       if(r.requestParams?.t!=='get_theme_time'||!/^\d+$/.test(r.requestParams?.zizumNum)||!/^\d+$/.test(r.requestParams?.themeNum)||!r.dateParam)throw Error('요일 대체에는 시간표 요청의 지점·테마·날짜 조건이 필요합니다.');
       if(!Array.isArray(r.allowedMessages)||!r.allowedMessages.length||r.allowedMessages.some(x=>typeof x!=='string'||!x))throw Error('대체할 오류 문구가 필요합니다.');
       if(!Array.isArray(r.samples)||!r.samples.length)throw Error('확인된 시간표가 필요합니다.');
+      if(r.weekdayGroups!==undefined&&(!Array.isArray(r.weekdayGroups)||r.weekdayGroups.some(group=>!Array.isArray(group)||!group.length||group.some(day=>!Number.isInteger(day)||day<0||day>6)||new Set(group).size!==group.length)))throw Error('요일 그룹을 확인하세요.');
       const dates=new Set();
       for(const s of r.samples){if(!dateValue(s.date)||dates.has(s.date)||s.response?.status!==true||!Array.isArray(s.response.data)||!s.response.data.length||s.response.data.some(row=>!row||String(row.theme_num)!==r.requestParams.themeNum||!own(row,'enable')))throw Error('시간표 날짜와 테마를 확인하세요.');dates.add(s.date);}
     }else throw Error('잘못된 작업');
@@ -57,7 +58,9 @@
       if(r.action==='weekdayFallback'){
         if(value?.status!==false||own(value,'data')||!r.allowedMessages.includes(value.msg))continue;
         const target=dateValue(params?.[r.dateParam]);if(!target)continue;
-        const source=r.samples.filter(s=>s.date<params[r.dateParam]&&dateValue(s.date).getUTCDay()===target.getUTCDay()).sort((a,b)=>b.date.localeCompare(a.date))[0];
+        const targetDay=target.getUTCDay(),group=r.weekdayGroups?.find(days=>days.includes(targetDay));
+        const allowedDays=new Set(group||[targetDay]);
+        const source=r.samples.filter(s=>s.date<params[r.dateParam]&&allowedDays.has(dateValue(s.date).getUTCDay())).sort((a,b)=>b.date.localeCompare(a.date))[0];
         if(!source)continue;
         const result=JSON.parse(JSON.stringify(source.response));
         for(const row of result.data)row.enable='Y';

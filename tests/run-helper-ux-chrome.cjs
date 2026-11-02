@@ -42,6 +42,8 @@ const deadline=setTimeout(()=>{console.error('Helper UI deadline exceeded');chil
  assert.equal((await saved()).keyescapeDateUnlockEnabled,false);
  assert.equal(await ev("document.querySelector('#keyescapeOpening').checked&&!document.querySelector('#keyescapeOpening').disabled"),true);
  await click('enablePlay33');await until(()=>ev('!helperBusy'),'Play33 started');assert.equal((await saved()).sites.length,2);
+ assert.equal(await ev("document.querySelector('#enablePlay33').hidden"),true,'registered site hides permission action');
+ assert.equal(await ev("!!document.querySelector('#play33Defaults a[href=\"https://play33.kr/reservation\"]')"),true,'reservation link stays available');
  await click('play33Toggle');await until(()=>ev('!helperBusy'),'panel off');assert.equal((await saved()).play33Enabled,false);
  assert.equal((await saved()).keyescapeTimetableEnabled,true);
  await click('advancedTab');await click('globalEnabled');

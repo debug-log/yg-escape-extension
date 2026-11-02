@@ -10,6 +10,13 @@ const run=(date,original=failure,r=rule,extra={})=>E.transform(original,[r],endp
 test('fallback selects nearest strictly earlier same weekday and only changes enable',()=>{
  const out=run('2026-11-12');assert.equal(out.matched,true);assert.deepEqual(out.value,{status:true,msg:'',data:[{num:2,theme_num:66,gubun:'A',hh:'09',mm:'45',enable:'Y'}]});assert.equal(out.sourceDate,'2026-11-05');assert.equal(rule.samples[1].response.data[0].enable,'N');
 });
+test('fallback uses the nearest sample in a confirmed weekday group',()=>{
+ const grouped={...rule,weekdayGroups:[[1,2,3,4]],samples:[sample('2026-11-02',1),sample('2026-11-03',2)]};
+ const thursday=E.transform(failure,[grouped],endpoint,'POST','https://keyescape.com/reservation1.php','t=get_theme_time&zizumNum=22&themeNum=66&date=2026-11-05');
+ const friday=E.transform(failure,[grouped],endpoint,'POST','https://keyescape.com/reservation1.php','t=get_theme_time&zizumNum=22&themeNum=66&date=2026-11-06');
+ assert.equal(thursday.matched,true);assert.equal(thursday.sourceDate,'2026-11-03');assert.equal(thursday.value.data[0].num,2);
+ assert.equal(friday.matched,false);
+});
 test('fallback preserves successful responses, unknown errors and responses with data',()=>{
  for(const original of [{status:true,data:[{enable:'N'}]},{status:false,msg:'입력 오류'},{...failure,data:[]}])assert.equal(run('2026-11-12',original).matched,false);
 });
