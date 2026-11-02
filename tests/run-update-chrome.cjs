@@ -104,8 +104,9 @@ const deadline=setTimeout(()=>{console.error('Updater integration deadline excee
  await until(()=>evaluate(s,`!document.getElementById('install').disabled`),'initial folder connection');
  assert.equal(await evaluate(s,`document.activeElement.id`),'install');
  assert.equal(downloads,0,'connecting a folder must not install automatically');
+ const previousDocumentTime=await evaluate(s,'performance.timeOrigin');
  await call('Page.reload',{},s);
- await until(()=>evaluate(s,`!document.getElementById('install').disabled`).catch(()=>false),'stored handle reconnect');
+ await until(()=>evaluate(s,`performance.timeOrigin !== ${previousDocumentTime} && document.readyState === 'complete' && !document.getElementById('install').disabled`).catch(()=>false),'stored handle reconnect in new document');
  assert.equal(await evaluate(s,`document.getElementById('reloadPage').checked && !document.getElementById('reloadPage').disabled`),true);
  assert.equal(await evaluate(s,`document.getElementById('folderSettings').open`),false);
  await screenshot(s,'update-available');
