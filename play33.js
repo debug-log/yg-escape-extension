@@ -115,7 +115,7 @@
   }
   const observer=new MutationObserver(scan);
   root.XRPlay33={getState(){return {ready:true,eligible:eligible(),active:!!host?.isConnected};},configure(config){
-    if(!eligible()||!config.sites.includes(location.origin)){stop();return;}
+    if(!eligible()||!config.sites.includes(location.origin)||config.play33Enabled===false){stop();return;}
     if(active)return;
     active=true;observer.observe(document,{childList:true,subtree:true});scan();
   }};

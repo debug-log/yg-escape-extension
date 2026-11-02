@@ -67,6 +67,16 @@ const fixture=`<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  assert.equal(await ev("document.querySelector('#unrelated input').value"),'99');
  assert.equal(await ev('submitted'),0);
  await change('branch','7');
+ await evaluate(options.sessionId,"document.querySelector('#play33Toggle').click()",true);
+ await until(()=>ev("!document.querySelector('#xr-play33-panel')"),'toggle removes panel');
+ assert.deepEqual(await values(),original,'disabling restores the original reservation');
+ await call('Page.reload',{},page.sessionId);
+ await until(()=>ev("!!document.forms[0]"),'disabled page reloaded');
+ assert.equal(await ev("!!document.querySelector('#xr-play33-panel')"),false);
+ assert.equal(await evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config.play33Enabled)"),false);
+ await evaluate(options.sessionId,"document.querySelector('#play33Toggle').click()",true);
+ await until(()=>ev("!!document.querySelector('#xr-play33-panel')"),'toggle restores panel');
+ await change('branch','7');
  assert.equal((await values()).theme,'40');assert.equal((await values()).name,'예약자');assert.equal((await values())._token,'unchanged');
  const shot=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:true},page.sessionId);
  fs.writeFileSync(path.join(os.tmpdir(),'xre-play33-desktop.png'),Buffer.from(shot.data,'base64'));

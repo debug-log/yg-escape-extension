@@ -117,11 +117,12 @@ async function saveSiteSettings(message) {
   if (!['http:', 'https:'].includes(url.protocol) || url.origin !== message.site) {
     throw Error('올바른 사이트 주소가 필요합니다.');
   }
-  if (!['dateUnlock', 'antiDebug', 'restoreDefaults', 'register'].includes(message.setting)
+  if (!['dateUnlock', 'play33', 'antiDebug', 'restoreDefaults', 'register'].includes(message.setting)
+      || (message.setting === 'play33' && message.site !== 'https://play33.kr')
       || (['dateUnlock', 'restoreDefaults'].includes(message.setting) && message.site !== 'https://keyescape.com')) {
     throw Error('지원하지 않는 사이트 설정입니다.');
   }
-  if (['dateUnlock', 'antiDebug'].includes(message.setting) && typeof message.enabled !== 'boolean') {
+  if (['dateUnlock', 'play33', 'antiDebug'].includes(message.setting) && typeof message.enabled !== 'boolean') {
     throw Error('설정 값을 확인해주세요.');
   }
   if (!await chrome.permissions.contains({origins: [message.site + '/*']})) {
@@ -130,6 +131,7 @@ async function saveSiteSettings(message) {
   const {config: current = initial} = await chrome.storage.local.get('config');
   let config = {...current, sites: [...new Set([...current.sites, message.site])]};
   if (message.setting === 'dateUnlock') config.keyescapeDateUnlockEnabled = message.enabled;
+  if (message.setting === 'play33') config.play33Enabled = message.enabled;
   if (message.setting === 'antiDebug') {
     const disabled = new Set(config.antiDebugDisabledSites || []);
     if (message.enabled) disabled.delete(message.site);

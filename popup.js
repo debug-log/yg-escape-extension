@@ -39,7 +39,7 @@
   async function changeSiteSetting(setting, enabled) {
     if (busy || !origin) return;
     busy = true;
-    for (const id of ['dateUnlockToggle', 'antiDebugToggle', 'addCurrentSite']) $(id).disabled = true;
+    for (const id of ['dateUnlockToggle', 'play33Toggle', 'antiDebugToggle', 'addCurrentSite']) $(id).disabled = true;
     $('popupMessage').textContent = '';
     try {
       // Request directly from the click gesture, before any storage reads.
@@ -56,6 +56,7 @@
     }
   }
   $('dateUnlockToggle').onchange = () => changeSiteSetting('dateUnlock', $('dateUnlockToggle').checked);
+  $('play33Toggle').onchange = () => changeSiteSetting('play33', $('play33Toggle').checked);
   $('antiDebugToggle').onchange = () => changeSiteSetting('antiDebug', $('antiDebugToggle').checked);
   $('addCurrentSite').onclick = () => {
     if ($('addCurrentSite').disabled) return;
@@ -93,8 +94,12 @@
       : registered ? '현재 사이트 등록됨' : '현재 사이트 추가';
     const play33Site = origin === 'https://play33.kr';
     const play33Eligible = play33Site && page?.pathname === '/reservation/create';
+    const play33Desired = registered && config.play33Enabled !== false;
+    $('play33Toggle').disabled = !play33Site;
+    $('play33Toggle').checked = play33Site && play33Desired;
     $('play33Feature').hidden = !play33Site;
     const play33Text = !registered ? '10개 테마 기본 제공 · 사이트를 추가해주세요'
+      : !play33Desired ? '꺼짐'
       : !play33Eligible ? '10개 테마 기본 제공 · 예약 정보 입력 페이지에서 사용'
       : '10개 테마 기본 제공 · 새로고침 필요';
     $('dateUnlockFeature').hidden = origin !== 'https://keyescape.com';
@@ -118,10 +123,10 @@
       const antiReload = !!origin && (!anti?.ready || anti.reloadRequired || anti.active !== antiDesired);
       const date = state.dateUnlock;
       const dateReload = !!date?.reloadRequired || (dateDesired && !date?.ready);
-      const play33Reload = play33Eligible && registered && !state.play33?.ready;
+      const play33Reload = play33Eligible && play33Desired && !state.play33?.ready;
       $('reload').hidden = !(antiReload || dateReload || play33Reload);
       $('play33State').textContent = play33Text;
-      if (play33Eligible && registered && state.play33?.ready) {
+      if (play33Eligible && play33Desired && state.play33?.ready) {
         $('play33State').textContent = state.play33.active ? '적용 중 · 10개 테마 기본 제공'
           : '예약 폼을 기다리는 중 · 시간대를 선택해 입장해주세요';
       }

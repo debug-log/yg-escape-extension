@@ -141,12 +141,28 @@ $('restoreDefaults').onclick = async () => {
 // Bundled Play33 controls are a site feature, not an XHR replacement rule.
 function renderPlay33Status(current){
  const registered=current.sites.includes('https://play33.kr');
+ $('play33Toggle').checked=registered&&current.play33Enabled!==false;
  $('enablePlay33').disabled=registered;
  $('enablePlay33').textContent=registered?'플레이33 등록됨':'플레이33 사용';
  $('play33DefaultState').textContent=registered
-  ? '사용 준비 완료 · 예약 정보 입력 페이지를 새로고침하세요.'
+  ? current.play33Enabled===false?'꺼짐 · 예약 선택 변경 패널을 숨겼습니다.':'사용 준비 완료 · 예약 정보 입력 페이지를 새로고침하세요.'
   : '4개 지점 · 10개 테마 기본 제공 · 사이트 접근 권한을 허용하면 사용할 수 있습니다.';
 }
+$('play33Toggle').onchange=async()=>{
+ const control=$('play33Toggle');const enabled=control.checked;control.disabled=true;
+ try{
+  const granted=await chrome.permissions.request({origins:['https://play33.kr/*']});
+  if(!granted)throw Error('사이트 접근 권한이 허용되지 않았습니다.');
+  const result=await chrome.runtime.sendMessage({type:'siteSetting',site:'https://play33.kr',setting:'play33',enabled});
+  if(!result?.ok)throw Error(result?.error||'설정을 저장하지 못했습니다.');
+  renderPlay33Status(result.config);
+  message(enabled?'플레이33 예약 선택을 켰습니다.':'플레이33 예약 선택을 껐습니다.');
+ }catch(error){
+  const {config:current}=await chrome.storage.local.get('config');
+  if(current)renderPlay33Status(current);
+  message(error.message);
+ }finally{control.disabled=false;}
+};
 for(const branch of XRPlay33Catalog.branches){
  const group=document.createElement('div');
  const heading=document.createElement('h3');heading.textContent=branch.name;group.append(heading);
