@@ -42,6 +42,10 @@ def build(root, output, tag=None):
             z.writestr(entry, data)
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
     archive.with_suffix('.zip.sha256').write_text(f'{digest}  {archive.name}\n', encoding='utf-8')
+    update = {'product': 'debug-log/yg-escape-extension', 'version': version,
+              'url': f'https://github.com/debug-log/yg-escape-extension/releases/download/v{version}/{archive.name}',
+              'size': archive.stat().st_size, 'sha256': digest}
+    (output / 'update.json').write_text(json.dumps(update, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(archive)
     return archive
 

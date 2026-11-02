@@ -34,8 +34,10 @@ execFileSync('python',[packageScript,'--root',candidate,'--out-dir',output]);
 const zip=fs.readFileSync(path.join(output,`yg-escape-extension-${version}.zip`));
 const sha=crypto.createHash('sha256').update(zip).digest('hex');
 const download=`https://github.com/debug-log/yg-escape-extension/releases/download/v${version}/yg-escape-extension-${version}.zip`;
+const metadataUrl='https://github.com/debug-log/yg-escape-extension/releases/latest/download/update.json';
 let apiMode='release',downloads=0;
 const release={tag_name:'v'+version,assets:[{name:`yg-escape-extension-${version}.zip`,size:zip.length,digest:'sha256:'+sha,browser_download_url:download}]};
+const metadata={product:'debug-log/yg-escape-extension',version,url:download,size:zip.length,sha256:sha};
 const server=http.createServer((req,res)=>{res.setHeader('Content-Type','text/html');res.end('<!doctype html><title>Original page</title><h1>Update integration target</h1>');});
 fs.mkdirSync(path.join(temp,'profile','Default'),{recursive:true});
 fs.writeFileSync(path.join(temp,'profile','Default','Preferences'),JSON.stringify({profile:{default_content_setting_values:{file_system_write_guard:1,file_system_read_guard:1}}}));
@@ -43,7 +45,7 @@ let child,socket,sequence=0;const pending=new Map();
 function call(method,params={},sessionId){return new Promise((resolve,reject)=>{const id=++sequence;const timer=setTimeout(()=>{pending.delete(id);reject(Error('CDP timeout: '+method));},15000);pending.set(id,{resolve,reject,timer});socket.send(JSON.stringify({id,method,params,...(sessionId?{sessionId}:{})}));});}
 async function evaluate(sessionId,expression,userGesture=false){const r=await call('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true,userGesture},sessionId);if(r.exceptionDetails)throw Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result.value;}
 async function until(check,label,timeout=15000){const deadline=Date.now()+timeout;while(Date.now()<deadline){const value=await check();if(value)return value;await new Promise(r=>setTimeout(r,80));}throw Error('Timed out: '+label);}
-async function intercept(sessionId){await call('Fetch.enable',{patterns:[{urlPattern:'https://api.github.com/repos/debug-log/yg-escape-extension/releases/latest'},{urlPattern:download}]},sessionId);}
+async function intercept(sessionId){await call('Fetch.enable',{patterns:[{urlPattern:metadataUrl},{urlPattern:'https://api.github.com/repos/debug-log/yg-escape-extension/releases/latest'},{urlPattern:download}]},sessionId);}
 async function tab(url){const {targetId}=await call('Target.createTarget',{url:'about:blank'});const {sessionId}=await call('Target.attachToTarget',{targetId,flatten:true});await intercept(sessionId);await call('Page.navigate',{url},sessionId);await until(()=>evaluate(sessionId,`document.readyState==='complete' && location.href!=='about:blank'`).catch(()=>false),'tab load');return {sessionId,targetId};}
 async function screenshot(sessionId,name,width=900){
  if(!process.env.XRE_UPDATE_SCREENSHOTS)return;
@@ -77,9 +79,9 @@ const deadline=setTimeout(()=>{console.error('Updater integration deadline excee
  await new Promise((resolve,reject)=>{socket.onopen=resolve;socket.onerror=reject;});
  socket.onmessage=event=>{const m=JSON.parse(event.data);
   if(m.method==='Fetch.requestPaused'){
-   const isZip=m.params.request.url===download;if(isZip)downloads++;
+   const isZip=m.params.request.url===download,isMetadata=m.params.request.url===metadataUrl;if(isZip)downloads++;
    const status=isZip?200:apiMode==='missing'?404:200;
-   const body=isZip?zip:Buffer.from(JSON.stringify(apiMode==='missing'?{message:'Not Found'}:release));
+   const body=isZip?zip:Buffer.from(JSON.stringify(apiMode==='missing'?{message:'Not Found'}:isMetadata?metadata:release));
    call('Fetch.fulfillRequest',{requestId:m.params.requestId,responseCode:status,responseHeaders:[{name:'Content-Type',value:isZip?'application/zip':'application/json'}],body:body.toString('base64')},m.sessionId).catch(()=>{});
   }
   const p=pending.get(m.id);if(p){pending.delete(m.id);clearTimeout(p.timer);m.error?p.reject(Error(m.error.message)):p.resolve(m.result);}

@@ -21,6 +21,7 @@ sys.stdout.buffer.write(out.getvalue())
 }
 const files=()=>({'manifest.json':JSON.stringify({manifest_version:3,name:'YG Escpae Extension',version:'1.4.1',background:{service_worker:'background.js'},action:{default_popup:'popup.html'},options_page:'options.html'}),'background.js':'new worker','popup.html':'new popup','options.html':'new settings','update.html':'new updater','update.js':'update controller','update-core.js':'update core','update-store.js':'update store'});
 const release=(version='1.4.1')=>({tag_name:'v'+version,assets:[{name:`yg-escape-extension-${version}.zip`,browser_download_url:`https://github.com/debug-log/yg-escape-extension/releases/download/v${version}/yg-escape-extension-${version}.zip`,size:1234,digest:'sha256:'+'a'.repeat(64)}]});
+const metadata=(version='1.4.1')=>({product:'debug-log/yg-escape-extension',version,url:`https://github.com/debug-log/yg-escape-extension/releases/download/v${version}/yg-escape-extension-${version}.zip`,size:1234,sha256:'a'.repeat(64)});
 
 test('version comparison is numeric and rejects malformed versions',()=>{
  assert.equal(U.compareVersions('1.10.0','1.9.9'),1);
@@ -30,16 +31,28 @@ test('version comparison is numeric and rejects malformed versions',()=>{
 });
 test('release selection pins repository, version and named ZIP',()=>{
  assert.equal(U.selectRelease(release()).version,'1.4.1');
+ assert.equal(U.selectMetadata(metadata()).version,'1.4.1');
  assert.equal(U.selectRelease({...release(),prerelease:true}),null);
  assert.equal(U.selectRelease({...release(),draft:true}),null);
  assert.throws(()=>U.selectRelease({...release(),assets:[]}));
  const bad=release();bad.assets[0].browser_download_url='https://evil.example/update.zip';assert.throws(()=>U.selectRelease(bad));
+ for(const changed of [{product:'other/repo'},{url:'https://evil.example/update.zip'},{sha256:'bad'},{size:0}])assert.throws(()=>U.selectMetadata({...metadata(),...changed}));
+});
+test('release checks prefer fixed latest metadata without using the rate-limited API',async()=>{
+ let data={},calls=[];const cache={get:async k=>data[k],set:async(k,v)=>{data[k]=v;}};
+ const result=await U.checkRelease({cache,fetcher:async url=>{
+  calls.push(url);
+  if(url===U.METADATA)return {ok:true,status:200,json:async()=>metadata()};
+  throw Error('GitHub API must not be called when metadata is available');
+ },now:1000});
+ assert.equal(result.release.version,'1.4.1');
+ assert.deepEqual(calls,[U.METADATA]);
 });
 test('release checks cache success and handle 404/offline without affecting stored rules',async()=>{
  let data={},calls=0;const cache={get:async k=>data[k],set:async(k,v)=>{data[k]=v;}};
- const fetcher=async()=>{calls++;return {ok:true,status:200,json:async()=>release()};};
+ const fetcher=async url=>{calls++;return url===U.METADATA?{ok:false,status:404}:{ok:true,status:200,json:async()=>release()};};
  const first=await U.checkRelease({cache,fetcher,now:1000});assert.equal(first.release.version,'1.4.1');
- await U.checkRelease({cache,fetcher,now:2000});assert.equal(calls,1);
+ await U.checkRelease({cache,fetcher,now:2000});assert.equal(calls,2);
  const missing=await U.checkRelease({cache,fetcher:async()=>({ok:false,status:404}),force:true,now:3000});assert.equal(missing.release,null);
  const failed=await U.checkRelease({cache,fetcher:async()=>{throw Error('offline');},force:true,now:4000});assert.match(failed.error,/offline/);
 });

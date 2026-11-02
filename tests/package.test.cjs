@@ -23,5 +23,7 @@ test('shipping ZIP roundtrips through the real updater and excludes research/bac
  assert.ok(![...pkg.files.keys()].some(f=>f.startsWith('tests/')||f.includes('backup')||f.endsWith('.csv')));
  assert.ok(!pkg.files.has('package.json'));
  const digest=await fs.readFile(path.join(output,`yg-escape-extension-${version}.zip.sha256`),'utf8');assert.ok(digest.startsWith(await U.sha256(bytes)));
+ const metadata=JSON.parse(await fs.readFile(path.join(output,'update.json'),'utf8'));
+ assert.deepEqual(metadata,{product:'debug-log/yg-escape-extension',version,url:`https://github.com/debug-log/yg-escape-extension/releases/download/v${version}/yg-escape-extension-${version}.zip`,size:bytes.length,sha256:await U.sha256(bytes)});
  assert.throws(()=>execFileSync('python',['scripts/package.py','--out-dir',output,'--tag','v0.0.1'],{stdio:'pipe'}));
 });

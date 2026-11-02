@@ -2,6 +2,7 @@
   'use strict';
   const REPO = 'debug-log/yg-escape-extension';
   const API = `https://api.github.com/repos/${REPO}/releases/latest`;
+  const METADATA = `https://github.com/${REPO}/releases/latest/download/update.json`;
   const MAX_BYTES = 16 * 1024 * 1024;
   const decoder = new TextDecoder('utf-8', {fatal: true});
 
@@ -32,17 +33,34 @@
     return {version, url, size: asset.size, sha256: asset.digest.slice(7), page: `https://github.com/${REPO}/releases/tag/v${version}`};
   }
 
+  function selectMetadata(data) {
+    if (data?.product !== REPO) throw Error('업데이트 정보의 제품이 올바르지 않습니다.');
+    const version = String(data.version || '');
+    versionParts(version);
+    const url = `https://github.com/${REPO}/releases/download/v${version}/yg-escape-extension-${version}.zip`;
+    if (data.url !== url || !/^[a-f0-9]{64}$/.test(data.sha256 || '')) throw Error('검증 가능한 배포 ZIP이 없습니다. GitHub 릴리스를 확인해주세요.');
+    if (!(data.size > 0 && data.size <= MAX_BYTES)) throw Error('배포 ZIP 크기를 확인해주세요.');
+    return {version, url, size: data.size, sha256: data.sha256, page: `https://github.com/${REPO}/releases/tag/v${version}`};
+  }
+
   async function checkRelease({cache, fetcher = fetch, force = false, now = Date.now()}) {
     const saved = await cache.get('updateCheck');
     const ttl = saved?.error ? 10 * 60 * 1000 : 6 * 60 * 60 * 1000;
     if (!force && saved && now >= saved.checkedAt && now - saved.checkedAt < ttl) return saved;
     let result;
     try {
-      const response = await fetcher(API, {headers: {Accept: 'application/vnd.github+json'}, cache: 'no-store', signal: AbortSignal.timeout(15000)});
-      if (response.status === 404) result = {release: null};
+      let response;
+      try {
+        response = await fetcher(METADATA, {headers: {Accept: 'application/json'}, cache: 'no-store', signal: AbortSignal.timeout(15000)});
+      } catch { /* Fall back to the GitHub API for releases without update.json. */ }
+      if (response?.ok) result = {release: selectMetadata(await response.json())};
       else {
-        if (!response.ok) throw Error(response.status === 403 || response.status === 429 ? 'GitHub 요청 한도에 도달했습니다. 잠시 후 다시 확인하세요.' : `업데이트 확인 실패 (${response.status})`);
-        result = {release: selectRelease(await response.json())};
+        response = await fetcher(API, {headers: {Accept: 'application/vnd.github+json'}, cache: 'no-store', signal: AbortSignal.timeout(15000)});
+        if (response.status === 404) result = {release: null};
+        else {
+          if (!response.ok) throw Error(response.status === 403 || response.status === 429 ? 'GitHub 요청 한도에 도달했습니다. 잠시 후 다시 확인하세요.' : `업데이트 확인 실패 (${response.status})`);
+          result = {release: selectRelease(await response.json())};
+        }
       }
     } catch (error) {
       result = {release: saved?.release || null, error: error.message};
@@ -265,7 +283,7 @@
     return journal;
   }
 
-  const api = {REPO, API, MAX_BYTES, compareVersions, selectRelease, checkRelease, sha256, downloadRelease, safePath, parsePackage, readFile, verifyDirectory, applyPackage, restoreBackup};
+  const api = {REPO, API, METADATA, MAX_BYTES, compareVersions, selectRelease, selectMetadata, checkRelease, sha256, downloadRelease, safePath, parsePackage, readFile, verifyDirectory, applyPackage, restoreBackup};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.XREUpdate = api;
 })(globalThis);
