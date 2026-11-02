@@ -16,7 +16,26 @@ function render(){
  }
  $('sites').append(row);}
  if(selectedSite)$('site').value=selectedSite;
- $('rules').replaceChildren();config.rules.forEach((rule,i)=>{const row=document.createElement('div');row.className='item';row.append(document.createTextNode(`${rule.enabled?'●':'○'} ${rule.name} · ${rule.site} `),button('편집',()=>fill(rule)),button(rule.enabled?'끄기':'켜기',async()=>{rule.enabled=!rule.enabled;await persist();}),button('↑',async()=>{if(i>0){[config.rules[i-1],config.rules[i]]=[rule,config.rules[i-1]];await persist();}}),button('↓',async()=>{if(i<config.rules.length-1){[config.rules[i],config.rules[i+1]]=[config.rules[i+1],rule];await persist();}}),button('삭제',async()=>{config.rules.splice(i,1);if(editing===rule.id)editing=null;await persist();}));$('rules').append(row);});
+ $('rules').replaceChildren();
+ config.rules.forEach((rule,i)=>{
+  const row=document.createElement('div');row.className='advanced-rule';
+  const info=document.createElement('div');info.className='advanced-rule-info';
+  const heading=document.createElement('div');heading.className='advanced-rule-heading';
+  const status=document.createElement('span');status.className='advanced-rule-status'+(rule.enabled?' is-enabled':'');status.setAttribute('aria-label',rule.enabled?'켜짐':'꺼짐');
+  const name=document.createElement('strong');name.textContent=rule.name;
+  heading.append(status,name);
+  const site=document.createElement('small');site.textContent=rule.site;
+  info.append(heading,site);
+  const actions=document.createElement('div');actions.className='advanced-rule-actions';
+  const toggle=button(rule.enabled?'끄기':'켜기',async()=>{rule.enabled=!rule.enabled;await persist();});
+  toggle.setAttribute('aria-label',rule.name+' '+(rule.enabled?'끄기':'켜기'));toggle.setAttribute('aria-pressed',String(rule.enabled));
+  const up=button('↑',async()=>{if(i>0){[config.rules[i-1],config.rules[i]]=[rule,config.rules[i-1]];await persist();}});
+  const down=button('↓',async()=>{if(i<config.rules.length-1){[config.rules[i],config.rules[i+1]]=[config.rules[i+1],rule];await persist();}});
+  up.disabled=i===0;down.disabled=i===config.rules.length-1;
+  up.setAttribute('aria-label',rule.name+' 위로 이동');down.setAttribute('aria-label',rule.name+' 아래로 이동');
+  actions.append(button('편집',()=>fill(rule)),toggle,up,down,button('삭제',async()=>{config.rules.splice(i,1);if(editing===rule.id)editing=null;await persist();}));
+  row.append(info,actions);$('rules').append(row);
+ });
 }
 function fill(r){scopeCleared=false;$('scopeBox').hidden=!r.pageParams;$('scopeText').textContent=r.pageParams?'이 규칙은 특정 지점·테마에만 적용됩니다: '+JSON.stringify(r.pageParams):'';showMode(false);editing=r.id||null;for(const k of ['name','site','url','match','method','action'])$(k).value=r[k];$('ruleEnabled').checked=r.enabled;for(const k of ['conditions','patches','replacement'])$(k).value=JSON.stringify(r[k]??(k==='replacement'?{}:[]),null,2);$('requestParams').value=JSON.stringify(r.requestParams||{},null,2);$('fallbackConfig').value=JSON.stringify({dateParam:r.dateParam||'date',allowedMessages:r.allowedMessages||[],samples:r.samples||[]},null,2);visibility();$('editorTitle').textContent=editing?'규칙 편집':'새 규칙';}
 function visibility(){$('patchLabel').hidden=$('action').value!=='patch';$('replaceLabel').hidden=$('action').value!=='replace';$('fallbackLabel').hidden=$('action').value!=='weekdayFallback';}

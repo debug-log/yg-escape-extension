@@ -60,7 +60,7 @@ const fixture='<!doctype html><title>Date fixture</title><select id="theme"><opt
  assert.equal((await state()).dateUnlock.reloadRequired,false);
  assert.equal(await ev("document.querySelector('#date').classList.contains('disabled')"),true);
  assert.equal(await ev("document.querySelector('#date').classList.contains('available')"),false);
- assert.equal(await ev("document.querySelector('#date').style.outline"),'');
+ assert.equal(await ev("document.querySelector('#date').style.backgroundImage"),'');
  assert.equal(await ev("document.querySelector('#native').classList.contains('available')"),true);
  assert.equal(await ev("document.querySelector('#theme').selectedIndex"),1);
  assert.equal(await ev("document.querySelector('#past').title"),'original hint');
@@ -74,7 +74,7 @@ const fixture='<!doctype html><title>Date fixture</title><select id="theme"><opt
  assert.equal(await ev("document.querySelector('#theme').selectedIndex"),1);
  // Reusing a cell for a naturally available date must not disable the new date.
  await ev("document.querySelector('#next').setAttribute('data-date','2027-01-01')");
- await until(()=>ev("document.querySelector('#next').style.outline===''") ,'reused date clears old decoration');
+ await until(()=>ev("document.querySelector('#next').style.backgroundImage===''") ,'reused date clears old decoration');
  await call('Target.activateTarget',{targetId:page.targetId});const popup=await tab('chrome-extension://'+extension.id+'/popup.html',true);
  await until(()=>evaluate(popup.sessionId,"document.querySelector('#dateUnlockState')?.textContent.includes('적용 중')"),'popup date status');
  assert.equal(await evaluate(popup.sessionId,"document.querySelector('#enabled').checked"),false);

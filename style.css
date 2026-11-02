@@ -10,3 +10,19 @@
 .popup-update{margin:16px 0 0;padding:12px;font-size:12px}.popup-update p{margin:0 0 8px}.popup-update button{margin:0}.update-page{max-width:700px}.update-page p{line-height:1.65}.update-page #progress{white-space:pre-wrap;color:#235c49}.update-page #error{white-space:pre-wrap;color:#9b302b}.update-page a{color:#235c49;margin-left:12px}
 
 nav .update-link{margin-left:auto;align-self:center;color:#235c49}
+
+/* Advanced rules keep a stable action column regardless of title length. */
+.advanced-rule{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:24px;padding:17px 0;border-bottom:1px solid #e2e7e1}
+.advanced-rule:last-child{border-bottom:0}
+.advanced-rule-info{min-width:0}
+.advanced-rule-heading{display:flex;align-items:baseline;gap:10px;line-height:1.55}
+.advanced-rule-heading strong{font-size:14px;font-weight:600;overflow-wrap:anywhere}
+.advanced-rule-status{flex:0 0 7px;width:7px;height:7px;border-radius:50%;border:1px solid #9ca9a1;align-self:flex-start;margin-top:8px}
+.advanced-rule-status.is-enabled{background:#42735b;border-color:#42735b}
+.advanced-rule-info>small{display:block;margin:4px 0 0 17px;font-size:12px;color:#758078;overflow-wrap:anywhere}
+.advanced-rule-actions{display:grid;grid-template-columns:52px 52px 32px 32px 52px;gap:6px;align-items:center}
+.advanced-rule-actions button{margin:0;padding:8px 0;font-size:13px;min-height:34px}
+.advanced-rule-actions button.secondary{background:#eef2ef}
+.advanced-rule-actions button.secondary:hover:not(:disabled){background:#dfe8e2}
+.advanced-rule-actions button:last-child{background:transparent;color:#82635c}
+@media(max-width:640px){.advanced-rule{grid-template-columns:minmax(0,1fr);gap:12px}.advanced-rule-actions{justify-self:end}#advanced section{padding:16px}}

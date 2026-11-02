@@ -40,7 +40,7 @@
         cell.classList.remove('disabled');
         cell.classList.add('available');
         // Keep the calendar's selected background and date text visible.
-        for(const [name,value] of [['outline','2px dashed #b45309'],['outline-offset','-3px']]){
+        for(const [name,value] of [['background-image','linear-gradient(rgba(35, 92, 73, 0.07), rgba(35, 92, 73, 0.07))']]){
           const saved={value:cell.style.getPropertyValue(name),priority:cell.style.getPropertyPriority(name)};
           cell.style.setProperty(name,value,'important');
           saved.applied=cell.style.getPropertyValue(name);
