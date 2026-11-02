@@ -189,11 +189,16 @@ class UpdatePage {
     await this.checkRelease(true);
     if (this.checkError) throw Error('새 버전 확인에 실패했습니다. 다시 확인한 후 업데이트해주세요.');
     if (!this.hasNewVersion()) throw Error('설치할 새 버전이 없습니다.');
-    if (await this.diskVersion() !== this.manifest.version) {
+    const release = this.release;
+    const diskVersion = await this.diskVersion();
+    if (!this.journal && !this.partial && diskVersion === release.version) {
+      await this.restart(diskVersion);
+      return;
+    }
+    if (diskVersion !== this.manifest.version) {
       throw Error('폴더의 버전이 변경되었습니다. 확장을 먼저 새로고침해주세요.');
     }
 
-    const release = this.release;
     this.showStage('Download', `v${release.version} 다운로드 중…`);
     const bytes = await XREUpdate.downloadRelease(release);
     this.showStage('Verify', '다운로드한 파일을 검증하고 있습니다…');

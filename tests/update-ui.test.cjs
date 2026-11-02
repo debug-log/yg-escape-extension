@@ -26,7 +26,8 @@ async function fixture(options = {}) {
     location: {href: 'chrome-extension://test/update.html' + (options.query || '')},
     window: {addEventListener() {}, removeEventListener() {}},
     XREUpdate: {...U, checkRelease: async () => result, verifyDirectory: async () => {},
-      readFile: async () => new TextEncoder().encode(JSON.stringify({version: data.journal?.state === 'partial' && options.manifestBlocked ? '1.4.4' : data.journal ? '1.4.5' : '1.4.4'})),
+      readFile: async () => new TextEncoder().encode(JSON.stringify({version: options.diskVersion
+        || (data.journal?.state === 'partial' && options.manifestBlocked ? '1.4.4' : data.journal ? '1.4.5' : '1.4.4')})),
       downloadRelease: async () => { downloads++; await options.downloadGate; return new Uint8Array(); },
       parsePackage: async () => ({version: '1.4.5', manifest: {}}),
       applyPackage: async () => { data.journal = {state: options.partial ? 'partial' : 'committed', version: '1.4.5', failures: options.partial ? [{name:'update.js',error:'Failed to perform Safe Browsing check.'}] : []}; return data.journal; }},
@@ -58,6 +59,15 @@ test('available update keeps connected folder quiet and displays version transit
   assert.match(f.elements.version.textContent, /1\.4\.4.*1\.4\.5/);
   assert.equal(f.elements.folderSettings.open, false);
   assert.equal(f.elements.setup.hidden, true);
+});
+
+test('already updated folder restarts the stale extension without downloading again', async () => {
+  const f = await fixture({diskVersion: '1.4.5'});
+  await f.elements.install.onclick();
+  assert.equal(f.elements.error.textContent, '');
+  assert.equal(f.downloads, 0);
+  assert.equal(f.restarts, 1);
+  assert.equal(f.local.updatePending.version, '1.4.5');
 });
 
 test('first folder connection leads to install without downloading automatically', async () => {
