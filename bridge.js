@@ -61,7 +61,8 @@
       reply({
         ...state,
         antiDebug,
-        dateUnlock: typeof XRDateUnlock !== 'undefined' ? XRDateUnlock.getState() : null
+        dateUnlock: typeof XRDateUnlock !== 'undefined' ? XRDateUnlock.getState() : null,
+        play33: typeof XRPlay33 !== 'undefined' ? XRPlay33.getState() : null
       });
     }
   });

@@ -39,14 +39,15 @@
   async function changeSiteSetting(setting, enabled) {
     if (busy || !origin) return;
     busy = true;
-    for (const id of ['dateUnlockToggle', 'antiDebugToggle']) $(id).disabled = true;
+    for (const id of ['dateUnlockToggle', 'antiDebugToggle', 'addCurrentSite']) $(id).disabled = true;
     $('popupMessage').textContent = '';
     try {
       // Request directly from the click gesture, before any storage reads.
       const granted = await chrome.permissions.request({origins: [origin + '/*']});
       if (!granted) throw Error('사이트 접근 권한이 허용되지 않아 설정을 변경하지 않았습니다.');
       await sendCommand({type: 'siteSetting', site: origin, setting, enabled});
-      $('popupMessage').textContent = '저장 완료';
+      $('popupMessage').textContent = setting === 'register'
+        ? '사이트를 추가했습니다. 새로고침하여 적용해주세요.' : '저장 완료';
     } catch (error) {
       $('popupMessage').textContent = error.message;
     } finally {
@@ -56,6 +57,10 @@
   }
   $('dateUnlockToggle').onchange = () => changeSiteSetting('dateUnlock', $('dateUnlockToggle').checked);
   $('antiDebugToggle').onchange = () => changeSiteSetting('antiDebug', $('antiDebugToggle').checked);
+  $('addCurrentSite').onclick = () => {
+    if ($('addCurrentSite').disabled) return;
+    return changeSiteSetting('register');
+  };
 
   function matchesPage(rule) {
     return rule.enabled && rule.site === origin && (!rule.pageParams
@@ -83,6 +88,16 @@
     box.checked = config.enabled;
     const rules = config.rules.filter(matchesPage);
     const registered = config.sites.includes(origin);
+    $('addCurrentSite').disabled = !origin || registered;
+    $('addCurrentSite').textContent = !origin ? '웹페이지에서 사이트를 추가하세요'
+      : registered ? '현재 사이트 등록됨' : '현재 사이트 추가';
+    const play33Site = origin === 'https://play33.kr';
+    const play33Eligible = play33Site && page?.pathname === '/reservation/create';
+    $('play33Feature').hidden = !play33Site;
+    const play33Text = !registered ? '10개 테마 기본 제공 · 사이트를 추가해주세요'
+      : !play33Eligible ? '10개 테마 기본 제공 · 예약 정보 입력 페이지에서 사용'
+      : '10개 테마 기본 제공 · 새로고침 필요';
+    $('dateUnlockFeature').hidden = origin !== 'https://keyescape.com';
     const dateEligible = origin === 'https://keyescape.com' && page?.pathname === '/reservation1.php';
     const dateDesired = dateEligible && registered && config.keyescapeDateUnlockEnabled !== false;
     const dateText = dateSettingText(dateEligible, registered, dateDesired);
@@ -103,7 +118,13 @@
       const antiReload = !!origin && (!anti?.ready || anti.reloadRequired || anti.active !== antiDesired);
       const date = state.dateUnlock;
       const dateReload = !!date?.reloadRequired || (dateDesired && !date?.ready);
-      $('reload').hidden = !(antiReload || dateReload);
+      const play33Reload = play33Eligible && registered && !state.play33?.ready;
+      $('reload').hidden = !(antiReload || dateReload || play33Reload);
+      $('play33State').textContent = play33Text;
+      if (play33Eligible && registered && state.play33?.ready) {
+        $('play33State').textContent = state.play33.active ? '적용 중 · 10개 테마 기본 제공'
+          : '예약 폼을 기다리는 중 · 시간대를 선택해 입장해주세요';
+      }
 
       $('dateUnlockState').textContent = dateReload ? '새로고침 필요'
         : dateDesired && date?.active ? '적용 중' : dateText;
@@ -116,6 +137,7 @@
         : '변경 기록 없음';
     } catch {
       if (busy) return;
+      $('play33State').textContent = play33Text;
       $('dateUnlockState').textContent = dateText;
       $('antiDebugState').textContent = antiDesired ? '새로고침 필요' : '꺼짐';
       $('state').textContent = registered ? '새로고침 필요' : '사이트 등록 필요';

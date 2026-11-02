@@ -4,6 +4,7 @@ const message=text=>$('message').textContent=text;
 const button=(label,handler)=>{const b=document.createElement('button');b.textContent=label;b.className='secondary';b.onclick=()=>Promise.resolve().then(handler).catch(e=>message(e.message));return b;};
 async function persist(enable=false){const result=await chrome.runtime.sendMessage({type:'save',before:baseline,after:config,enable});if(!result.ok)throw Error(result.error);config=result.config;baseline=structuredClone(config);render();renderQuick();}
 function render(){
+ renderPlay33Status(config);
  const selectedSite=$('site').value;
  $('sites').replaceChildren();$('site').replaceChildren();
  for(const site of config.sites){const opt=document.createElement('option');opt.value=site;opt.textContent=site;$('site').append(opt);const row=document.createElement('div');row.className='item';row.append(document.createTextNode(site),button('삭제',async()=>{config.sites=config.sites.filter(s=>s!==site);await persist();await chrome.permissions.remove({origins:[site+'/*']});message('사이트를 해제했습니다. 방해 완화를 완전히 해제하려면 대상 페이지를 새로고침하세요.');}));const label=document.createElement('label');const toggle=document.createElement('input');toggle.type='checkbox';toggle.checked=!(config.antiDebugDisabledSites||[]).includes(site);toggle.setAttribute('aria-label',site+' 개발자도구 방해 완화');
@@ -50,14 +51,21 @@ $('preview').onclick=()=>{try{const rule=read();const url=new URL($('previewUrl'
 chrome.runtime.sendMessage({type:'sync'}).then(result=>{if(!result.ok)throw Error(result.error);return chrome.storage.local.get('config');}).then(result=>{config=result.config||{enabled:false,sites:[],rules:[]};baseline=structuredClone(config);render();renderQuick();visibility();useCurrent(false);}).catch(error=>message(error.message));
 
 function showMode(simple){$('quick').hidden=!simple;$('advanced').hidden=simple;$('simpleTab').setAttribute('aria-pressed',String(simple));$('advancedTab').setAttribute('aria-pressed',String(!simple));}
+$('newResponseRule').onclick=()=>{$('newRule').onclick();};
 $('simpleTab').onclick=()=>showMode(true);$('advancedTab').onclick=()=>showMode(false);
 function quickVisibility(){$('quickReplacementLabel').hidden=$('quickAction').value!=='replace';$('quickPatchHint').hidden=$('quickAction').value!=='patch';$('quickResult').textContent='';}
 $('quickAction').onchange=quickVisibility;
-async function useCurrent(notify=true){const {pageContext}=await chrome.storage.session.get('pageContext');if(pageContext?.url){$('quickPage').value=pageContext.url;if(notify)message('확장 팝업에서 선택한 페이지 주소를 입력했습니다.');}else if(notify)message('예약 페이지에서 확장 팝업 → 설정 변경을 눌러주세요. 또는 예약 페이지 주소를 직접 붙여넣으세요.');}
+async function useCurrent(notify=true){const {pageContext}=await chrome.storage.session.get('pageContext');if(pageContext?.url){
+ const origin=new URL(pageContext.url).origin;
+ if(origin!=='https://keyescape.com'){
+  if(notify){$('newRule').onclick();$('siteInput').value=origin;if(config.sites.includes(origin))$('site').value=origin;message('일반 응답 규칙 편집기를 열었습니다. 사이트를 등록하고 요청 URL과 응답 조건을 설정하세요.');}
+  return;
+ }
+ $('quickPage').value=pageContext.url;if(notify)message('확장 팝업에서 선택한 페이지 주소를 입력했습니다.');}else if(notify)message('예약 페이지에서 확장 팝업 → 설정 변경을 눌러주세요. 또는 예약 페이지 주소를 직접 붙여넣으세요.');}
 $('useCurrent').onclick=async()=>{resetQuick();await useCurrent();};
 $('newQuick').onclick=async()=>{resetQuick();await useCurrent(false);};
 $('clearScope').onclick=()=>{scopeCleared=true;$('scopeBox').hidden=true;message('저장하면 테마 범위 제한이 해제됩니다.');};
-function resetQuick(){quickEditing=null;$('quickTitle').textContent='새 키이스케이프 설정';$('quickPage').value='';$('quickName').value='';$('quickReplacement').value='';$('quickResult').textContent='';}
+function resetQuick(){quickEditing=null;$('quickTitle').textContent='기본 템플릿 · 키이스케이프';$('quickPage').value='';$('quickName').value='';$('quickReplacement').value='';$('quickResult').textContent='';}
 chrome.storage.onChanged.addListener((changes,area)=>{if(area==='session'&&changes.pageContext){if(!quickEditing&&!$('quickName').value&&!$('quickReplacement').value)useCurrent(false);else message('다른 페이지에서 설정을 열었습니다. 새 설정을 만들려면 현재 페이지 사용을 누르세요. 기존 편집 내용은 유지했습니다.');}});
 function quickRule(){let replacement;if($('quickAction').value==='replace'){try{replacement=JSON.parse($('quickReplacement').value);}catch{throw Error('교체할 응답에 전체 JSON을 붙여넣으세요. 중괄호와 쉼표를 확인해주세요.');}}return XRUX.preset({page:$('quickPage').value,name:$('quickName').value,action:$('quickAction').value,replacement});}
 function quickPreview(){const rule=quickRule();$('quickResult').textContent=rule.action==='replace'?XRUX.summary(rule.replacement):'성공 응답의 시간대 목록을 유지하고 선택 상태만 변경합니다.';$('quickResult').className='success';return rule;}
@@ -129,3 +137,39 @@ $('restoreDefaults').onclick = async () => {
   control.disabled = false;
  }
 };
+
+// Bundled Play33 controls are a site feature, not an XHR replacement rule.
+function renderPlay33Status(current){
+ const registered=current.sites.includes('https://play33.kr');
+ $('enablePlay33').disabled=registered;
+ $('enablePlay33').textContent=registered?'플레이33 등록됨':'플레이33 사용';
+ $('play33DefaultState').textContent=registered
+  ? '사용 준비 완료 · 예약 정보 입력 페이지를 새로고침하세요.'
+  : '4개 지점 · 10개 테마 기본 제공 · 사이트 접근 권한을 허용하면 사용할 수 있습니다.';
+}
+for(const branch of XRPlay33Catalog.branches){
+ const group=document.createElement('div');
+ const heading=document.createElement('h3');heading.textContent=branch.name;group.append(heading);
+ for(const theme of branch.themes){
+  const item=document.createElement('details'),summary=document.createElement('summary');
+  summary.textContent=`${theme.name} · branch=${branch.id}, theme=${theme.id}`;item.append(summary);
+  const weekday=document.createElement('p');weekday.textContent='월~목·금: '+theme.weekday.join(', ');
+  const weekend=document.createElement('p');weekend.textContent='토·일: '+theme.weekend.join(', ');
+  item.append(weekday,weekend);group.append(item);
+ }
+ $('play33Catalog').append(group);
+}
+$('enablePlay33').onclick=async()=>{
+ const control=$('enablePlay33');if(control.disabled)return;control.disabled=true;
+ try{
+  const granted=await chrome.permissions.request({origins:['https://play33.kr/*']});
+  if(!granted)throw Error('사이트 접근 권한이 허용되지 않았습니다.');
+  const result=await chrome.runtime.sendMessage({type:'siteSetting',site:'https://play33.kr',setting:'register'});
+  if(!result?.ok)throw Error(result?.error||'사이트 등록에 실패했습니다. 확장 프로그램을 새로고침해주세요.');
+  config=result.config;baseline=structuredClone(config);render();renderQuick();
+  message('플레이33을 등록했습니다. 예약 정보 입력 페이지를 새로고침하세요. 응답 규칙을 만들 필요는 없습니다.');
+ }catch(error){message(error.message);control.disabled=false;}
+};
+chrome.storage.onChanged.addListener((changes,area)=>{
+ if(area==='local'&&changes.config?.newValue)renderPlay33Status(changes.config.newValue);
+});

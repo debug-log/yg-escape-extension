@@ -29,6 +29,7 @@
     return t&&day!==null?[...(day===0||day===6?t.weekend:t.weekday)]:[];
   }
   if(typeof module!=='undefined'&&module.exports){module.exports={branches,times};return;}
+  root.XRPlay33Catalog={branches,times};
   if(root.XRPlay33)return;
 
   const keys=['branch','theme','date','time'];
@@ -113,7 +114,7 @@
     form.prepend(host);
   }
   const observer=new MutationObserver(scan);
-  root.XRPlay33={configure(config){
+  root.XRPlay33={getState(){return {ready:true,eligible:eligible(),active:!!host?.isConnected};},configure(config){
     if(!eligible()||!config.sites.includes(location.origin)){stop();return;}
     if(active)return;
     active=true;observer.observe(document,{childList:true,subtree:true});scan();

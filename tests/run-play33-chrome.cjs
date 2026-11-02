@@ -37,7 +37,11 @@ const fixture=`<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  const options=await tab('chrome-extension://'+extension.id+'/options.html');
  await until(()=>evaluate(options.sessionId,'typeof config!=="undefined"&&!!config'),'options loaded');
  async function save(sites){return evaluate(options.sessionId,`(async()=>{const before=(await chrome.storage.local.get('config')).config;const r=await chrome.runtime.sendMessage({type:'save',before,after:{...before,enabled:false,sites:${JSON.stringify(sites)}}});if(!r.ok)throw Error(r.error);})()`);}
- await save(['https://play33.kr']);
+ assert.equal(await evaluate(options.sessionId,"document.querySelectorAll('#play33Catalog details').length"),10);
+ assert.equal(await evaluate(options.sessionId,"document.querySelector('#quickTitle').textContent"),'기본 템플릿 · 키이스케이프');
+ await evaluate(options.sessionId,"document.querySelector('#enablePlay33').click()",true);
+ await until(()=>evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config.sites.includes('https://play33.kr'))"),'built-in Play33 activation');
+ assert.equal(await evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config.enabled)"),false);
  async function fixtureTab(url){const t=await tab('about:blank');await call('Fetch.enable',{patterns:[{urlPattern:'https://play33.kr/*',resourceType:'Document',requestStage:'Request'}]},t.sessionId);await call('Page.navigate',{url},t.sessionId);await until(()=>evaluate(t.sessionId,"!!document.forms[0]"),'fixture loaded');return {...t,url};}
  const page=await fixtureTab('https://play33.kr/reservation/create#content');
  const ev=expression=>evaluate(page.sessionId,expression);
@@ -75,12 +79,25 @@ const fixture=`<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  const other=await fixtureTab('https://play33.kr/reservation');
  assert.equal(await evaluate(other.sessionId,"!!document.querySelector('#xr-play33-panel')"),false);
  await save([]);await until(()=>ev("!document.querySelector('#xr-play33-panel')"),'remove site');assert.deepEqual(await values(),original);
- await save(['https://play33.kr']);await until(()=>ev("!!document.querySelector('#xr-play33-panel')"),'reenable without duplicate');
+ await call('Target.activateTarget',{targetId:page.targetId});
+ const popup=await tab('chrome-extension://'+extension.id+'/popup.html',true);
+ await until(()=>evaluate(popup.sessionId,"document.querySelector('#addCurrentSite')?.disabled === false"),'quick registration available');
+ await evaluate(popup.sessionId,"document.querySelector('#addCurrentSite').click()",true);
+ await until(()=>ev("!!document.querySelector('#xr-play33-panel')"),'quick registration reenables panel');
+ await until(()=>evaluate(popup.sessionId,"document.querySelector('#play33State').textContent.includes('적용 중')"),'popup Play33 state');
+ assert.equal(await evaluate(popup.sessionId,"document.querySelector('#addCurrentSite').disabled"),true);
+ assert.equal(await evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config.enabled)"),false);
+ const popupShot=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:true},popup.sessionId);
+ fs.writeFileSync(path.join(os.tmpdir(),'xre-play33-quick-add.png'),Buffer.from(popupShot.data,'base64'));
+ await call('Target.closeTarget',{targetId:popup.targetId});
+ const optionsShot=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:true},options.sessionId);
+ fs.writeFileSync(path.join(os.tmpdir(),'xre-play33-defaults.png'),Buffer.from(optionsShot.data,'base64'));
  assert.equal(await ev("document.querySelectorAll('#xr-play33-panel').length"),1);
  await ev(`(()=>{const form=document.forms[0],copy=form.cloneNode(true);copy.querySelector('#xr-play33-panel').remove();form.replaceWith(copy);})()`);
  await until(()=>ev("!!document.querySelector('#xr-play33-panel')"),'form replacement');
  await change('branch','4');assert.equal((await values()).theme,'26');
  assert.equal(await ev('submitted'),0);
+ console.log('PASS built-in catalog, settings activation and popup quick registration with independent response switch');
  console.log('PASS real extension: initial preservation, dependent choices, atomic hidden writes, invalid date, restore, personal data, no submission, mobile layout, frame/path exclusions, site removal and form replacement');
  console.log('Screenshots: '+path.join(os.tmpdir(),'xre-play33-desktop.png')+' / '+path.join(os.tmpdir(),'xre-play33-mobile.png'));
 }catch(e){console.error(e);process.exitCode=1;}finally{

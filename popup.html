@@ -14,8 +14,15 @@
   <div class="site-heading">
     <span class="site-caption">현재 사이트</span>
     <h1 id="site"></h1>
+    <button id="addCurrentSite" class="site-add" disabled>현재 사이트 추가</button>
   </div>
   <div class="setting-list">
+    <div class="setting-row" id="play33Feature" hidden>
+      <div class="setting-copy">
+        <strong>플레이33 예약 선택</strong>
+        <p id="play33State" role="status"></p>
+      </div>
+    </div>
     <div class="setting-row">
       <div class="setting-copy">
         <label for="enabled">응답 변경</label>
@@ -23,7 +30,7 @@
       </div>
       <input class="toggle" type="checkbox" role="switch" id="enabled" aria-describedby="state">
     </div>
-    <div class="setting-row">
+    <div class="setting-row" id="dateUnlockFeature" hidden>
       <div class="setting-copy">
         <label for="dateUnlockToggle">날짜 제한 해제</label>
         <p id="dateUnlockState" role="status"></p>

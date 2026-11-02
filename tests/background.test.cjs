@@ -1,6 +1,16 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const vm=require('node:vm');const fs=require('node:fs');
 function fixture(fail=false){let config={enabled:true,sites:['https://example.com'],rules:[]},handler,registered=[],permitted=true;const event={addListener(){}};const chrome={runtime:{id:'test',getURL:p=>p,onInstalled:event,onStartup:event,onMessage:{addListener(fn){handler=fn;}}},permissions:{contains:async()=>permitted,onRemoved:event,onAdded:event},storage:{local:{get:async()=>({config}),set:async obj=>{config=obj.config;}}},scripting:{getRegisteredContentScripts:async()=>registered,unregisterContentScripts:async()=>{registered=[];},registerContentScripts:async scripts=>{if(fail)throw Error('denied');registered=scripts;},updateContentScripts:async scripts=>{if(fail)throw Error('denied');registered=scripts;}}};const ctx=vm.createContext({URL,fetch:async()=>({ok:true,json:async()=>JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8'))}),chrome,console:{error(){}},structuredClone});ctx.importScripts=()=>vm.runInContext(fs.readFileSync('settings.js','utf8'),ctx);vm.runInContext(fs.readFileSync('background.js','utf8'),ctx);return {send:m=>new Promise(resolve=>handler(m,{id:'test',url:'chrome-extension://test/options.html',tab:{id:1}},resolve)),get:()=>({config,registered}),setConfig:value=>{config=value;},revoke:()=>{permitted=false;}};}
 test('registration errors return failure instead of success',async()=>{const f=fixture(true);const result=await f.send({type:'sync'});assert.equal(result.ok,false);assert.match(result.error,/denied/);});
+
+test('quick registration is permission-gated, idempotent and preserves settings',async()=>{
+ const f=fixture();await f.send({type:'sync'});const original=structuredClone(f.get().config);
+ let r=await f.send({type:'siteSetting',site:'https://play33.kr',setting:'register'});
+ assert.equal(r.ok,true);assert.equal(r.config.enabled,original.enabled);assert.deepEqual(structuredClone(r.config.rules),original.rules);
+ r=await f.send({type:'siteSetting',site:'https://play33.kr',setting:'register'});
+ assert.equal(r.config.sites.filter(x=>x==='https://play33.kr').length,1);
+ f.revoke();r=await f.send({type:'siteSetting',site:'https://another.example',setting:'register'});
+ assert.equal(r.ok,false);assert.ok(!f.get().config.sites.includes('https://another.example'));
+});
 test('registered scripts use granted matches and MAIN/ISOLATED worlds',async()=>{const f=fixture();assert.equal((await f.send({type:'sync'})).ok,true);const scripts=f.get().registered;assert.equal(scripts.length,3);assert.equal(scripts[0].world,'MAIN');assert.equal(scripts[0].runAt,'document_start');assert.deepEqual(Array.from(scripts[0].matches),['https://example.com/*']);});
 test('serialized enabled updates preserve config',async()=>{const f=fixture();await f.send({type:'enabled',enabled:false});assert.equal(f.get().config.enabled,false);assert.equal(f.get().config.sites.length,1);});
 

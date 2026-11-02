@@ -13,11 +13,11 @@ async function popup(sendMessage, options = {}) {
       return elements.get(id);
     }},
     chrome: {
-      tabs: {query: async () => [{id: 1, url: 'https://keyescape.com/reservation1.php'}],
+      tabs: {query: async () => [{id: 1, url: options.url || 'https://keyescape.com/reservation1.php'}],
         sendMessage: options.pageState || (async () => { throw Error('no content script'); })},
       storage: {session: {set: async () => {}}, local: {get: async () => ({config: options.config || {enabled: false, sites: [], rules: []}})}},
       runtime: {sendMessage},
-      permissions: {request: async () => true}
+      permissions: {request: options.requestPermission || (async () => true)}
     },
     setInterval(callback) { polling = true; tick = callback; }
   };
@@ -25,11 +25,50 @@ async function popup(sendMessage, options = {}) {
   return {elements, polling, tick};
 }
 
+test('site-specific controls appear only on their own origin',async()=>{
+ for(const [url,dateVisible,playVisible] of [
+  ['https://www.google.com',false,false],
+  ['https://keyescape.com',true,false],
+  ['https://play33.kr/reservation/create',false,true],
+  ['chrome://extensions',false,false]
+ ]){
+  const {elements}=await popup(async()=>({ok:true}),{url});
+  assert.equal(elements.get('dateUnlockFeature').hidden,!dateVisible,url);
+  assert.equal(elements.get('play33Feature').hidden,!playVisible,url);
+ }
+});
+
 test('missing startup reply shows reload instructions and still initializes popup', async () => {
   const {elements, polling} = await popup(async () => undefined);
   assert.match(elements.get('popupMessage').textContent, /chrome:\/\/extensions/);
   assert.match(elements.get('rule').textContent, /사용 중인 규칙 없음/);
   assert.equal(polling, true);
+});
+
+test('quick add registers the exact current origin after permission, without enabling responses',async()=>{
+ const calls=[],config={enabled:false,sites:[],rules:[]};
+ const f=await popup(async m=>{calls.push(m);if(m.type==='siteSetting')config.sites.push(m.site);return {ok:true};},{config,url:'https://play33.kr/reservation/create#content',requestPermission:async p=>{calls.push(p);return true;}});
+ await f.elements.get('addCurrentSite').onclick();
+ assert.deepEqual(JSON.parse(JSON.stringify(calls.slice(1))),[{origins:['https://play33.kr/*']},{type:'siteSetting',site:'https://play33.kr',setting:'register'}]);
+ assert.equal(config.enabled,false);assert.equal(f.elements.get('addCurrentSite').disabled,true);
+ assert.match(f.elements.get('addCurrentSite').textContent,/등록됨/);
+ assert.equal(f.elements.get('reload').hidden,false);
+ assert.equal(f.elements.get('play33Feature').hidden,false);
+});
+
+test('quick add keeps config unchanged when permission is denied and excludes internal pages',async()=>{
+ const messages=[];
+ const denied=await popup(async m=>{messages.push(m);return {ok:true};},{requestPermission:async()=>false});
+ await denied.elements.get('addCurrentSite').onclick();
+ assert.equal(messages.length,1);assert.match(denied.elements.get('popupMessage').textContent,/권한/);
+ const internal=await popup(async()=>({ok:true}),{url:'chrome://extensions'});
+ assert.equal(internal.elements.get('addCurrentSite').disabled,true);
+});
+
+test('Play33 panel status is visible independently of response rules',async()=>{
+ const f=await popup(async()=>({ok:true}),{url:'https://play33.kr/reservation/create',config:{enabled:false,sites:['https://play33.kr'],rules:[]},pageState:async()=>({ready:true,enabled:false,antiDebug:{ready:true,active:true},play33:{ready:true,active:true}})});
+ assert.match(f.elements.get('play33State').textContent,/적용 중/);
+ assert.equal(f.elements.get('enabled').checked,false);
 });
 
 test('missing site setting reply shows reload instructions and restores checkbox', async () => {
