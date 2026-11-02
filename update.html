@@ -9,31 +9,44 @@
   <span class="eyebrow">YG Escpae Extension</span>
   <h1>확장 프로그램 업데이트</h1>
   <p class="muted">새 버전을 내려받고 설치 폴더에 적용합니다. 저장한 사이트와 규칙은 유지됩니다.</p>
-  <section>
-    <h2>버전 확인</h2>
+  <section class="update-flow" aria-labelledby="updateTitle">
+    <span class="eyebrow">업데이트</span>
+    <h2 id="updateTitle">새 버전을 확인하고 있습니다</h2>
     <p id="version">현재 버전 확인 중…</p>
     <p id="releaseStatus" role="status">GitHub에서 새 버전을 확인하고 있습니다.</p>
-    <button id="check" class="secondary">새로 확인</button>
-    <a href="https://github.com/debug-log/yg-escape-extension/releases" target="_blank" rel="noopener noreferrer">릴리스 보기</a>
-  </section>
-  <section>
-    <h2>설치 폴더</h2>
-    <p>처음 한 번, Chrome에 등록한 확장 폴더를 선택하고 수정을 허용해주세요. <code>manifest.json</code>이 있는 폴더입니다.</p>
-    <p id="folder" class="muted">연결된 폴더가 없습니다.</p>
-    <button id="choose" class="secondary" disabled>설치 폴더 선택</button>
-  </section>
-  <section>
-    <h2>업데이트 적용</h2>
-    <p>다운로드와 파일 교체가 끝나면 확장이 자동으로 다시 시작됩니다.</p>
-    <label><input id="reloadPage" type="checkbox" checked> 완료 후 원래 웹페이지 새로고침</label>
-    <p class="muted">새로고침하면 페이지에 입력 중인 내용이 사라질 수 있습니다.</p>
-    <button id="install" disabled>새 버전으로 업데이트</button>
-    <button id="finish" hidden>적용한 버전으로 다시 시작</button>
-    <button id="recover" class="secondary" hidden>이전 파일 복구</button>
+    <div id="setup" class="update-setup" hidden>
+      <h3>처음 한 번, 설치 폴더를 연결해주세요</h3>
+      <p>Chrome에 등록한 확장 폴더를 선택해주세요. <code>manifest.json</code>이 있는 폴더입니다. 다음 업데이트에도 이 연결을 사용합니다.</p>
+      <button id="chooseInitial" disabled>설치 폴더 연결</button>
+    </div>
+    <div id="reloadOptions" class="update-options" hidden>
+      <p>업데이트를 마치면 확장이 자동으로 다시 시작됩니다. 웹페이지 새로고침은 아래에서 별도로 선택할 수 있습니다.</p>
+      <label><input id="reloadPage" type="checkbox" checked disabled aria-describedby="reloadHint reloadWarning"> 완료 후 업데이트를 시작한 웹페이지 새로고침</label>
+      <p id="reloadHint" class="muted"></p>
+      <p id="reloadWarning" class="muted">새로고침하면 입력 중인 내용이 사라질 수 있습니다. 선택하지 않으면 필요할 때 직접 새로고침해주세요.</p>
+    </div>
+    <ol id="steps" class="update-steps" aria-label="업데이트 진행 단계" hidden>
+      <li id="stageDownload">다운로드</li><li id="stageVerify">검증</li><li id="stageApply">적용</li><li id="stageRestart">확장 재시작</li>
+    </ol>
     <p id="progress" role="status" aria-live="polite"></p>
     <p id="error" role="alert"></p>
+    <div class="update-actions">
+      <button id="install" disabled hidden>새 버전으로 업데이트</button>
+      <button id="finish" hidden>적용한 버전으로 다시 시작</button>
+      <button id="recover" class="secondary" hidden>이전 파일 복구</button>
+    </div>
+    <div class="update-links">
+      <button id="check" class="secondary" disabled>다시 확인</button>
+      <a href="https://github.com/debug-log/yg-escape-extension/releases" target="_blank" rel="noopener noreferrer">릴리스 보기</a>
+    </div>
   </section>
-  <p class="muted">업데이트 중에는 이 탭을 닫지 마세요. 폴더 수정 권한은 Chrome에서 다시 요청할 수 있습니다.</p>
+  <details id="folderSettings" class="update-folder">
+    <summary>설치 폴더 설정 <span id="folder" class="muted">연결 상태 확인 중…</span></summary>
+    <p>처음 한 번, Chrome에 등록한 확장 폴더를 연결하면 됩니다. 폴더 이름에 이전 버전 번호가 있어도 연결된 폴더에 새 버전이 적용됩니다.</p>
+    <p class="muted">폴더 연결은 저장됩니다. 폴더 수정 권한은 Chrome에서 다시 요청할 수 있습니다.</p>
+    <button id="choose" class="secondary" disabled>설치 폴더 선택</button>
+  </details>
+  <p class="muted update-footnote">업데이트 중에는 이 탭을 닫지 마세요.</p>
 </main>
 <script src="update-core.js"></script>
 <script src="update-store.js"></script>

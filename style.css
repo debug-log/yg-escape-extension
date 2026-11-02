@@ -51,3 +51,24 @@ nav .update-link{font-size:13px;text-underline-offset:4px}
 .update-page #progress{color:var(--text)}
 .update-page a{font-size:14px;text-underline-offset:4px}
 @media(max-width:520px){h1{font-size:26px}section{padding:18px}.list-heading{align-items:flex-start;flex-wrap:wrap;gap:8px}nav{flex-wrap:wrap}nav .update-link{margin-left:8px}}
+
+/* One update flow, with persistent setup kept out of the main action path. */
+.update-flow h2{margin:8px 0 12px;font-size:24px;letter-spacing:-.4px}
+.update-flow #version{font-weight:600}
+.update-setup,.update-options{margin:24px 0;padding:18px;background:var(--surface-muted);border-radius:12px}
+.update-setup h3{margin:0;font-size:16px}.update-setup p,.update-options p{font-size:14px}
+.update-options label{font-weight:600;font-size:14px;display:flex;align-items:flex-start;gap:8px}
+.update-options input{flex-shrink:0;margin-top:5px}
+.update-options #reloadHint,.update-options #reloadWarning{font-size:13px;margin:8px 0 0 22px;overflow-wrap:anywhere}
+.update-actions{display:flex;flex-wrap:wrap;gap:8px}.update-actions button{margin:0}
+.update-links{display:flex;align-items:center;gap:16px;margin-top:20px;padding-top:18px;border-top:1px solid var(--border)}
+.update-links button,.update-links a{margin:0}
+.update-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:0;list-style:none;margin:24px 0}
+.update-steps li{border-top:3px solid var(--border);padding-top:9px;font-size:13px;color:var(--text-muted)}
+.update-steps li[aria-current=step]{border-color:var(--action);color:var(--action);font-weight:700}
+.update-folder{padding:16px 20px;border:1px solid var(--border);border-radius:12px;background:white}
+.update-folder summary{cursor:pointer;font-size:14px;font-weight:600}
+.update-folder summary span{display:block;margin:5px 0 0 18px;font-weight:400;font-size:13px;overflow-wrap:anywhere}
+.update-folder p,.update-footnote{font-size:13px}
+.update-page #error:empty,.update-page #progress:empty{display:none}
+@media(max-width:520px){.update-flow h2{font-size:21px}.update-setup,.update-options{padding:14px}.update-actions button{width:100%}.update-steps{gap:5px}.update-steps li{font-size:12px}}

@@ -19,7 +19,7 @@ with zipfile.ZipFile(out,'w',compression=zipfile.ZIP_STORED) as z:
 sys.stdout.buffer.write(out.getvalue())
 `,JSON.stringify(files),version]));
 }
-const files=()=>({'manifest.json':JSON.stringify({manifest_version:3,name:'YG Escpae Extension',version:'1.4.1',background:{service_worker:'background.js'},action:{default_popup:'popup.html'},options_page:'options.html'}),'background.js':'new worker','popup.html':'new popup','options.html':'new settings','update.html':'new updater'});
+const files=()=>({'manifest.json':JSON.stringify({manifest_version:3,name:'YG Escpae Extension',version:'1.4.1',background:{service_worker:'background.js'},action:{default_popup:'popup.html'},options_page:'options.html'}),'background.js':'new worker','popup.html':'new popup','options.html':'new settings','update.html':'new updater','update.js':'update controller','update-core.js':'update core','update-store.js':'update store'});
 const release=(version='1.4.1')=>({tag_name:'v'+version,assets:[{name:`yg-escape-extension-${version}.zip`,browser_download_url:`https://github.com/debug-log/yg-escape-extension/releases/download/v${version}/yg-escape-extension-${version}.zip`,size:1234,digest:'sha256:'+'a'.repeat(64)}]});
 
 test('version comparison is numeric and rejects malformed versions',()=>{
@@ -91,10 +91,56 @@ test('mid-write failure restores old files and removes newly created files',asyn
 });
 test('locked files keep recovery journal until a later successful restore',async t=>{
  const root=await temp(t);await fs.writeFile(path.join(root,'manifest.json'),'old manifest');await fs.writeFile(path.join(root,'background.js'),'old worker');
- let locked=true;const dir=await directory(root,name=>locked&&name==='background.js');const store=memoryStore();
+ let locked=false;const dir=await directory(root,name=>{
+  if(name==='options.html'){locked=true;return true;}
+  return locked&&name==='background.js';
+ });const store=memoryStore();
  await assert.rejects(U.applyPackage(dir,await U.parsePackage(archive(files()),'1.4.1'),store),/자동 복구 실패/);
  assert.equal((await store.get('journal')).state,'writing');
  locked=false;await U.restoreBackup(dir,store);
  assert.equal(await fs.readFile(path.join(root,'background.js'),'utf8'),'old worker');assert.equal(await store.get('journal'),undefined);
 });
 module.exports={archive,files,directory,memoryStore};
+
+test('a package missing an updater dependency is rejected before installation',async()=>{
+ for(const name of ['update.js','update-core.js','update-store.js']){
+  const payload=files();delete payload[name];
+  await assert.rejects(U.parsePackage(archive(payload),'1.4.1'),/실행 파일/);
+ }
+});
+
+test('automatic update rejects new privileges and automatic injection surfaces',async()=>{
+ const payload=files(), installed=JSON.parse(payload['manifest.json']);
+ for(const changed of [{permissions:['debugger']},{host_permissions:['<all_urls>']},
+   {optional_permissions:['management']},{optional_host_permissions:['https://example.com/*']},
+   {content_scripts:[{matches:['<all_urls>'],js:['background.js']}]},
+   {externally_connectable:{matches:['https://example.com/*']}}]){
+  await assert.rejects(U.parsePackage(archive({...payload,'manifest.json':JSON.stringify({...installed,...changed})}),'1.4.1',installed),/권한|실행 설정/);
+ }
+ await U.parsePackage(archive(payload),'1.4.1',installed);
+});
+
+test('unchanged files are neither rewritten nor included in the rollback journal',async t=>{
+ const root=await temp(t), pkg=await U.parsePackage(archive(files()),'1.4.1');
+ await fs.writeFile(path.join(root,'update.js'),pkg.files.get('update.js'));
+ const writes=[],dir=await directory(root,name=>{writes.push(name);return false;}),store=memoryStore();
+ await U.applyPackage(dir,pkg,store);
+ assert.ok(!writes.includes('update.js'));
+ assert.ok(!(await store.get('journal')).backup.some(([name])=>name==='update.js'));
+ assert.ok(writes.includes('background.js'));
+});
+
+test('rollback attempts other files after a blocked write and retains its journal',async t=>{
+ const root=await temp(t),store=memoryStore(),bytes=s=>new TextEncoder().encode(s);
+ await fs.writeFile(path.join(root,'a.js'),'new a');await fs.writeFile(path.join(root,'b.js'),'new b');
+ await fs.writeFile(path.join(root,'manifest.json'),'new manifest');
+ await store.set('journal',{state:'committed',version:'1.4.1',backup:[['a.js',bytes('old a')],['b.js',bytes('old b')],['manifest.json',bytes('old manifest')]]});
+ const writes=[],dir=await directory(root,name=>{writes.push(name);return name==='a.js';});
+ await assert.rejects(U.restoreBackup(dir,store),/a\.js/);
+ assert.equal(await fs.readFile(path.join(root,'b.js'),'utf8'),'old b');
+ assert.equal(await fs.readFile(path.join(root,'manifest.json'),'utf8'),'new manifest');
+ assert.equal((await store.get('journal')).state,'writing');
+ await U.restoreBackup(await directory(root),store);
+ assert.equal(await fs.readFile(path.join(root,'manifest.json'),'utf8'),'old manifest');
+ assert.equal(await store.get('journal'),undefined);
+});

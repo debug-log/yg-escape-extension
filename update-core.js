@@ -136,7 +136,23 @@
     return entries;
   }
 
-  async function parsePackage(bytes, expectedVersion) {
+  function verifyManifestPolicy(next, current) {
+    if (!current) return;
+    for (const key of ['permissions', 'optional_permissions', 'host_permissions', 'optional_host_permissions']) {
+      const previous = current[key] || [];
+      if ((next[key] || []).some(value => !previous.includes(value))) {
+        throw Error(`새 권한이 추가된 배포본입니다 (${key}). 릴리스에서 변경 내용을 확인한 후 직접 설치해주세요.`);
+      }
+    }
+    for (const key of ['content_scripts', 'externally_connectable', 'web_accessible_resources',
+      'content_security_policy', 'sandbox', 'oauth2', 'devtools_page', 'chrome_url_overrides', 'side_panel', 'update_url', 'key']) {
+      if (JSON.stringify(next[key]) !== JSON.stringify(current[key])) {
+        throw Error(`확장 실행 설정이 변경되었습니다 (${key}). 릴리스에서 변경 내용을 확인한 후 직접 설치해주세요.`);
+      }
+    }
+  }
+
+  async function parsePackage(bytes, expectedVersion, currentManifest) {
     const files = readZip(bytes);
     const json = name => { if (!files.has(name)) throw Error(`필수 파일이 없습니다: ${name}`); return JSON.parse(decoder.decode(files.get(name))); };
     const release = json('release.json'), manifest = json('manifest.json');
@@ -146,9 +162,11 @@
     for (const [name, data] of files) {
       if (name !== 'release.json' && await sha256(data) !== release.files[name]) throw Error(`파일 검증 실패: ${name}`);
     }
-    for (const name of [manifest.background?.service_worker, manifest.action?.default_popup, manifest.options_page, 'update.html']) {
+    for (const name of [manifest.background?.service_worker, manifest.action?.default_popup, manifest.options_page,
+      'update.html', 'update.js', 'update-core.js', 'update-store.js']) {
       if (!name || !files.has(name)) throw Error('확장 실행 파일이 빠져 있습니다.');
     }
+    verifyManifestPolicy(manifest, currentManifest);
     return {version: expectedVersion, manifest, files};
   }
 
@@ -187,26 +205,41 @@
   async function restoreBackup(directory, store, progress = () => {}) {
     const journal = await store.get('journal');
     if (!journal) return;
+    // A partially restored package must never offer the "finish install" action.
+    await store.set('journal', {...journal, state: 'writing'});
     const entries = [...journal.backup].sort(([a], [b]) => (a === 'manifest.json') - (b === 'manifest.json'));
+    const failures = [];
     for (const [name, bytes] of entries) {
-      if (!safePath(name)) throw Error('복구 파일 경로를 확인해주세요.');
-      progress(`이전 파일 복구 중 · ${name}`);
-      if (bytes === null) {
-        try { const f = await fileHandle(directory, name); await f.parent.removeEntry(f.name); }
-        catch (error) { if (error.name !== 'NotFoundError') throw error; }
-      } else {
-        await writeFile(directory, name, bytes);
-        if (await sha256(await readFile(directory, name)) !== await sha256(bytes)) throw Error('복구 파일 검증 실패');
+      if (name === 'manifest.json' && failures.length) continue;
+      try {
+        if (!safePath(name)) throw Error('복구 파일 경로를 확인해주세요.');
+        progress(`이전 파일 복구 중 · ${name}`);
+        if (bytes === null) {
+          try { const f = await fileHandle(directory, name); await f.parent.removeEntry(f.name); }
+          catch (error) { if (error.name !== 'NotFoundError') throw error; }
+        } else {
+          const present = await readFile(directory, name);
+          if (present && await sha256(present) === await sha256(bytes)) continue;
+          await writeFile(directory, name, bytes);
+          if (await sha256(await readFile(directory, name)) !== await sha256(bytes)) throw Error('복구 파일 검증 실패');
+        }
+      } catch (error) {
+        failures.push(`${name}: ${error.message}`);
       }
     }
+    if (failures.length) throw Error(`일부 파일을 복구하지 못했습니다. 백업은 유지됩니다.\n${failures.join('\n')}`);
     await store.delete('journal');
   }
 
   async function applyPackage(directory, pkg, store, progress = () => {}) {
     if (await store.get('journal')) throw Error('이전 업데이트를 먼저 완료하거나 복구해주세요.');
-    const entries = [...pkg.files].sort(([a], [b]) => (a === 'manifest.json') - (b === 'manifest.json'));
-    const backup = [];
-    for (const [name] of entries) backup.push([name, await readFile(directory, name)]);
+    const entries = [], backup = [];
+    for (const [name, bytes] of [...pkg.files].sort(([a], [b]) => (a === 'manifest.json') - (b === 'manifest.json'))) {
+      const previous = await readFile(directory, name);
+      if (previous && await sha256(previous) === await sha256(bytes)) continue;
+      entries.push([name, bytes]);
+      backup.push([name, previous]);
+    }
     const journal = {state: 'writing', version: pkg.version, backup};
     await store.set('journal', journal);
     try {

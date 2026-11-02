@@ -27,6 +27,8 @@ for(const dir of [installed,candidate]){
  fs.writeFileSync(path.join(dir,'manifest.json'),JSON.stringify(manifest));
 }
 fs.appendFileSync(path.join(candidate,'style.css'),'\n/* updated integration fixture */\n');
+// Exercise a real controller replacement even when most package files match.
+fs.appendFileSync(path.join(candidate,'update.js'),'\n// Updated controller integration fixture.\n');
 execFileSync('python',[packageScript,'--root',candidate,'--out-dir',output]);
 const zip=fs.readFileSync(path.join(output,`yg-escape-extension-${version}.zip`));
 const sha=crypto.createHash('sha256').update(zip).digest('hex');
@@ -42,6 +44,13 @@ async function evaluate(sessionId,expression,userGesture=false){const r=await ca
 async function until(check,label,timeout=15000){const deadline=Date.now()+timeout;while(Date.now()<deadline){const value=await check();if(value)return value;await new Promise(r=>setTimeout(r,80));}throw Error('Timed out: '+label);}
 async function intercept(sessionId){await call('Fetch.enable',{patterns:[{urlPattern:'https://api.github.com/repos/debug-log/yg-escape-extension/releases/latest'},{urlPattern:download}]},sessionId);}
 async function tab(url){const {targetId}=await call('Target.createTarget',{url:'about:blank'});const {sessionId}=await call('Target.attachToTarget',{targetId,flatten:true});await intercept(sessionId);await call('Page.navigate',{url},sessionId);await until(()=>evaluate(sessionId,`document.readyState==='complete' && location.href!=='about:blank'`).catch(()=>false),'tab load');return {sessionId,targetId};}
+async function screenshot(sessionId,name,width=900){
+ if(!process.env.XRE_UPDATE_SCREENSHOTS)return;
+ const destination=path.resolve(process.env.XRE_UPDATE_SCREENSHOTS);fs.mkdirSync(destination,{recursive:true});
+ await call('Emulation.setDeviceMetricsOverride',{width,height:1100,deviceScaleFactor:1,mobile:false},sessionId);
+ assert.equal(await evaluate(sessionId,'document.documentElement.scrollWidth <= innerWidth'),true,'page must not overflow horizontally');
+ const shot=await call('Page.captureScreenshot',{format:'png'},sessionId);fs.writeFileSync(path.join(destination,name+'.png'),Buffer.from(shot.data,'base64'));
+}
 async function drop(sessionId,dir){
  await evaluate(sessionId,`window.dropDone=false;window.dropError=null;document.addEventListener('dragover',e=>e.preventDefault());document.addEventListener('drop',async e=>{e.preventDefault();try{window.testDirectory=await e.dataTransfer.items[0].getAsFileSystemHandle();if(!testDirectory)throw Error('Directory handle was null; items='+e.dataTransfer.items.length);window.dropDone=true;}catch(error){window.dropError=error.name+': '+error.message;}},{once:true});`);
  for(const type of ['dragEnter','dragOver','drop'])await call('Input.dispatchDragEvent',{type,x:100,y:100,data:{items:[],files:[dir],dragOperationsMask:1}},sessionId);
@@ -81,19 +90,41 @@ const deadline=setTimeout(()=>{console.error('Updater integration deadline excee
  const original=await tab(origin+'/page');
  const updater=await tab(extension+'/update.html');const s=updater.sessionId;
  await until(()=>evaluate(s,`document.getElementById('releaseStatus').textContent.includes('v${version}')`),'new release displayed');
+ assert.equal(await evaluate(s,`!document.getElementById('setup').hidden && document.getElementById('install').hidden`),true);
+ await screenshot(s,'initial-setup');
  // Store a custom rule and page target, then reconnect a real installation handle.
  await evaluate(s,`(async()=>{await chrome.runtime.sendMessage({type:'sync'});const {config}=await chrome.storage.local.get('config');config.rules.push({id:'personal',name:'preserve me'});config.sites=[${JSON.stringify(origin)}];await chrome.storage.local.set({config});const tabs=await chrome.tabs.query({});const tab=tabs.find(t=>t.url===${JSON.stringify(origin+'/page')});await chrome.storage.session.set({updateTarget:{id:tab.id,url:tab.url}});})()`);
  // A second copy with identical files must not pass the installation proof.
  await drop(s,candidate);
  assert.equal(await evaluate(s,`XREUpdate.verifyDirectory(testDirectory,name=>fetch(chrome.runtime.getURL(name),{cache:'no-store'})).then(()=>false,()=>true)`),true);
  await drop(s,installed);
- await evaluate(s,`(async()=>{await XREUpdate.verifyDirectory(testDirectory,name=>fetch(chrome.runtime.getURL(name),{cache:'no-store'}));await XREUpdateStore.set('directory',testDirectory);})()`);
+ // Only replace the native chooser; use the real connection button and writes.
+ await evaluate(s,`window.showDirectoryPicker=async()=>testDirectory;document.getElementById('chooseInitial').click()`,true);
+ await until(()=>evaluate(s,`!document.getElementById('install').disabled`),'initial folder connection');
+ assert.equal(await evaluate(s,`document.activeElement.id`),'install');
+ assert.equal(downloads,0,'connecting a folder must not install automatically');
  await call('Page.reload',{},s);
  await until(()=>evaluate(s,`!document.getElementById('install').disabled`).catch(()=>false),'stored handle reconnect');
+ assert.equal(await evaluate(s,`document.getElementById('reloadPage').checked && !document.getElementById('reloadPage').disabled`),true);
+ assert.equal(await evaluate(s,`document.getElementById('folderSettings').open`),false);
+ await screenshot(s,'update-available');
+ await screenshot(s,'update-available-narrow',375);
+ const settings=await tab(extension+'/update.html?settings=1');
+ await until(()=>evaluate(settings.sessionId,`!document.getElementById('install').disabled`),'settings entry ready');
+ assert.equal(await evaluate(settings.sessionId,`document.getElementById('reloadPage').disabled && !document.getElementById('reloadPage').checked && document.getElementById('reloadHint').textContent.includes('확장 아이콘')`),true);
+ await screenshot(settings.sessionId,'settings-reload-explanation');
+ await evaluate(settings.sessionId,`document.querySelector('#folderSettings summary').focus()`);
+ assert.equal(await evaluate(settings.sessionId,'document.activeElement.tagName'),'SUMMARY');
+ await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',text:'\r',unmodifiedText:'\r',windowsVirtualKeyCode:13},settings.sessionId);
+ await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13},settings.sessionId);
+ assert.equal(await evaluate(settings.sessionId,`document.getElementById('folderSettings').open`),true);
+ await call('Target.closeTarget',{targetId:settings.targetId});
  console.log('PASS latest release UI, wrong-copy rejection, persisted real directory handle');
  // Missing release is recoverable and leaves existing files untouched.
  apiMode='missing';await evaluate(s,`document.getElementById('check').click()`,true);
  await until(()=>evaluate(s,`document.getElementById('releaseStatus').textContent.includes('새로운 배포본이 없습니다')`),'404 release');
+ assert.equal(await evaluate(s,`document.getElementById('install').hidden && document.getElementById('reloadOptions').hidden`),true);
+ await screenshot(s,'latest-version');
  assert.equal(JSON.parse(fs.readFileSync(path.join(installed,'manifest.json'))).version,current);
  apiMode='release';await evaluate(s,`document.getElementById('check').click()`,true);
  await until(()=>evaluate(s,`!document.getElementById('install').disabled`),'release recheck');
@@ -125,6 +156,17 @@ const deadline=setTimeout(()=>{console.error('Updater integration deadline excee
  assert.equal(await evaluate(original.sessionId,`performance.getEntriesByType('navigation')[0].type`),'reload');
  assert.equal(downloads,1);assert.equal(JSON.parse(fs.readFileSync(path.join(installed,'manifest.json'))).version,version);
  assert.match(fs.readFileSync(path.join(installed,'style.css'),'utf8'),/updated integration fixture/);
+ assert.match(fs.readFileSync(path.join(installed,'update.js'),'utf8'),/Updated controller integration fixture/);
+ await screenshot(after,'update-complete');
+ await screenshot(after,'update-complete-narrow',375);
+ if(process.platform==='win32'&&process.env.XRE_DEFENDER_SCAN==='1'){
+  const scanner=path.join(process.env.ProgramData,'Microsoft/Windows Defender/Platform/CurrentVersion/MpCmdRun.exe');
+  const scan=execFileSync(scanner,['-Scan','-ScanType','3','-File',temp],{encoding:'utf8',windowsHide:true});
+  console.log(scan);
+  assert.match(scan,/found no threats/);
+  assert.ok(fs.existsSync(path.join(installed,'update.js')));
+  console.log('PASS Defender scan of installed/candidate fixtures and release ZIPs');
+ }
  await call('Emulation.setDeviceMetricsOverride',{width:900,height:1100,deviceScaleFactor:1,mobile:false},after);
  const shot=await call('Page.captureScreenshot',{format:'png'},after);fs.writeFileSync(path.join(os.tmpdir(),'xre-update-complete.png'),Buffer.from(shot.data,'base64'));
  console.log('PASS production updater: ZIP downloaded, files verified/replaced, extension restarted, settings retained, original page reloaded, journal cleared');
