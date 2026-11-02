@@ -32,16 +32,9 @@
     const latest=shift(today,r.leadDays-(opened?0:1));
     return {today,latest,next:shift(latest,1)};
   }
-  function remaining(ms){
-    if(ms<=0)return '오픈 예정 시각이 됐어요';
-    const seconds=Math.ceil(ms/1000);
-    if(seconds<600)return `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')} 남음`;
-    const hours=Math.floor(seconds/3600);
-    if(hours>=24)return `${Math.floor(hours/24)}일 ${hours%24}시간 남음`;
-    return `${hours}시간 ${Math.floor(seconds%3600/60)}분 남음`;
-  }
   const stamp=instant=>new Date(instant+KST).toISOString().slice(0,16).replace('T',' ');
-  const api={rule,state,range,remaining,stamp,valid,kstDate};
+  const isOpeningLaterToday=(current,now=Date.now())=>current.phase==='upcoming'&&kstDate(current.opensAt)===kstDate(now);
+  const api={rule,state,range,stamp,isOpeningLaterToday,valid,kstDate};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
   else root.XROpening=api;
 })(globalThis);

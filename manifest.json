@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YG Escpae Extension",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "등록한 사이트에서 조건에 맞는 XHR JSON 응답을 로컬로 변경합니다.",
   "minimum_chrome_version": "111",
   "permissions": [

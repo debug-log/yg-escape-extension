@@ -72,3 +72,17 @@ nav .update-link{font-size:13px;text-underline-offset:4px}
 .update-folder p,.update-footnote{font-size:13px}
 .update-page #error:empty,.update-page #progress:empty{display:none}
 @media(max-width:520px){.update-flow h2{font-size:21px}.update-setup,.update-options{padding:14px}.update-actions button{width:100%}.update-steps{gap:5px}.update-steps li{font-size:12px}}
+
+/* Play33 keeps registration quiet and gives the reservation journey one clear action. */
+.play33-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0 20px}
+.play33-actions #enablePlay33{margin:0}
+.play33-registration-state{display:inline-flex;align-items:center;gap:7px;color:#2f6b45;font-size:14px;font-weight:600}
+.play33-registration-state::before{content:"";width:18px;height:18px;border-radius:50%;background:#e8f5ed url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='m5 9 2.4 2.4L13 6' fill='none' stroke='%232f6b45' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px 18px no-repeat}
+.play33-reservation-link{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:9px 15px;border:1px solid #f2b8bd;border-radius:8px;color:var(--action);font-size:14px;font-weight:600;line-height:1.4;text-decoration:none}
+.play33-reservation-link::after{content:"↗";font-size:15px;line-height:1}
+.play33-reservation-link:hover{background:var(--brand-soft);border-color:#ec8f97}
+.play33-reservation-link:focus-visible{outline:3px solid var(--brand);outline-offset:3px}
+.play33-actions.is-registered #enablePlay33{display:none}
+.play33-actions.is-registered .play33-reservation-link{background:var(--action);border-color:var(--action);color:white}
+.play33-actions.is-registered .play33-reservation-link:hover{background:var(--action-hover);border-color:var(--action-hover)}
+@media(max-width:520px){.play33-actions{align-items:stretch;flex-direction:column}.play33-actions #enablePlay33,.play33-reservation-link{width:100%}.play33-registration-state{min-height:28px}}

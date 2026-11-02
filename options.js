@@ -1,4 +1,5 @@
 const $=id=>document.getElementById(id);
+const play33Actions=$('play33Actions'),play33RegistrationState=$('play33RegistrationState');
 let config,baseline,editing=null,quickEditing=null,scopeCleared=false;
 const message=text=>$('message').textContent=text;
 const button=(label,handler)=>{const b=document.createElement('button');b.textContent=label;b.className='secondary';b.onclick=()=>Promise.resolve().then(handler).catch(e=>message(e.message));return b;};
@@ -142,10 +143,11 @@ $('restoreDefaults').onclick = async () => {
 function renderPlay33Status(current){
  const registered=current.sites.includes('https://play33.kr');
  $('play33Toggle').checked=registered&&current.play33Enabled!==false;
- $('enablePlay33').disabled=registered;
- $('enablePlay33').textContent=registered?'플레이33 등록됨':'플레이33 사용';
+ play33Actions.classList.toggle('is-registered',registered);
+ play33RegistrationState.hidden=!registered;
+ $('enablePlay33').disabled=false;
  $('play33DefaultState').textContent=registered
-  ? current.play33Enabled===false?'꺼짐 · 예약 선택 변경 패널을 숨겼습니다.':'사용 준비 완료 · 예약 정보 입력 페이지를 새로고침하세요.'
+  ? current.play33Enabled===false?'꺼짐 · 예약 선택 변경 패널을 숨겼습니다.':'예약 정보 입력 페이지를 새로고침하면 바로 사용할 수 있습니다.'
   : '4개 지점 · 10개 테마 기본 제공 · 사이트 접근 권한을 허용하면 사용할 수 있습니다.';
 }
 $('play33Toggle').onchange=async()=>{

@@ -23,6 +23,14 @@ test('opening boundary advances the range exactly at the configured time',()=>{
   assert.deepEqual(O.range(r,before),{today:'2026-11-03',latest:'2026-11-09',next:'2026-11-10'});
   assert.deepEqual(O.range(r,before+1000),{today:'2026-11-03',latest:'2026-11-10',next:'2026-11-11'});
 });
+test('opening later today is identified from an already computed state',()=>{
+  const rule=O.rule('keyescape','22');
+  const before=Date.parse('2026-11-03T10:00:00+09:00');
+  const reached=Date.parse('2026-11-03T11:30:00+09:00');
+  assert.equal(O.isOpeningLaterToday(O.state(rule,'2026-11-09',before),before),true);
+  assert.equal(O.isOpeningLaterToday(O.state(rule,'2026-11-09',reached),reached),false);
+  assert.equal(O.isOpeningLaterToday(O.state(rule,'2026-11-10',before),before),false);
+});
 test('KST midnight, leap dates and unknown rules never imply availability',()=>{
   const now=Date.parse('2026-11-03T15:00:00Z');
   assert.equal(O.state(O.rule('keyescape','18'),'2026-11-03',now).phase,'past');
@@ -31,10 +39,6 @@ test('KST midnight, leap dates and unknown rules never imply availability',()=>{
   assert.equal(O.state(O.rule('play33','1'),'2028-02-29',now).phase,'upcoming');
   assert.equal(O.rule('play33','6'),null);
 });
-test('live calendar length overrides fallback lead days and countdown stays readable',()=>{
+test('live calendar length overrides fallback lead days',()=>{
   assert.equal(O.rule('keyescape','31',7).leadDays,6);
-  assert.equal(O.remaining(599000),'09:59 남음');
-  assert.equal(O.remaining(3600000),'1시간 0분 남음');
-  assert.equal(O.remaining(90000000),'1일 1시간 남음');
-  assert.equal(O.remaining(0),'오픈 예정 시각이 됐어요');
 });
