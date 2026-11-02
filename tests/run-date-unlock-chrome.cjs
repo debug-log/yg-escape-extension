@@ -73,22 +73,32 @@ const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  await ev("document.querySelector('#blocked').classList.remove('available');document.querySelector('#blocked').classList.add('disabled')");
  await until(()=>ev("document.querySelector('#blocked').classList.contains('xr-date-unlock-unconfirmed')"),'native reset restores unavailable shading');
  await until(()=>ev("!!document.querySelector('#date').dataset.xrOpening"),'future opening hint rendered');
- const card="document.querySelector('xr-opening-card').shadowRoot";
+ // A freshly rendered calendar must be annotated in the same turn, without waiting for the timer.
+ assert.equal(await ev(`(async()=>{
+   const calendar=document.querySelector('#datepicker');
+   const clone=new DOMParser().parseFromString(${JSON.stringify(fixture)},'text/html').querySelector('#datepicker');
+   calendar.replaceWith(clone);
+   await Promise.resolve();
+   return !!document.querySelector('#date').dataset.xrOpeningLabel;
+ })()`),true,'calendar replacement receives opening hints before the next task');
+
+ assert.equal(await ev("document.querySelectorAll('xr-opening-card').length"),0,'large opening card must stay removed');
+ assert.equal(await ev("document.querySelector('#date').hasAttribute('tabindex')"),false,'opening hints preserve native calendar focus');
  assert.equal(await ev("document.querySelector('#past').classList.contains('disabled')&&!document.querySelector('#past').classList.contains('available')"),true,'past dates stay locked');
  assert.equal(await ev("document.querySelector('#past').title"),'original hint','past dates do not receive the unlock explanation');
  await ev("document.querySelector('#date').click()");
- assert.match(await ev(`${card}.getElementById('when').textContent`),/2026-11-03 09:30/);
+ assert.match(await ev("document.querySelector('#date').dataset.xrOpeningLabel"),/2026-11-03 09:30/);
  await ev("document.querySelector('#theme').selectedIndex=1;document.querySelector('#theme').dispatchEvent(new Event('change',{bubbles:true}));document.querySelector('#date').click()");
  await ev('new Promise(r=>setTimeout(r,100))');
  assert.equal(await ev("document.querySelector('#date').classList.contains('available')&&!document.querySelector('#date').classList.contains('xr-date-unlock-unconfirmed')"),true,'themes without partial restrictions keep the original unlock behavior');
- assert.match(await ev(`${card}.getElementById('when').textContent`),/2026-10-30 09:30/,'current theme calendar span used');
+ assert.match(await ev("document.querySelector('#date').dataset.xrOpeningLabel"),/2026-10-30 09:30/,'current theme calendar span used');
  await ev("document.querySelector('#zizum').value='26';document.querySelector('#zizum').dispatchEvent(new Event('change',{bubbles:true}));document.querySelector('#date').click()");
  await ev('new Promise(r=>setTimeout(r,100))');
  assert.equal(await ev("document.querySelector('#date').classList.contains('available')"),true,'branches without partial restrictions keep the original unlock behavior');
- assert.equal(await ev(`${card}.getElementById('headline').textContent`),'오픈 일정 확인 필요');
+ assert.equal(await ev("document.querySelector('#date').dataset.xrOpeningLabel"),'오픈 일정 확인 필요');
  await ev("document.querySelector('#zizum').value='31';document.querySelector('#theme').selectedIndex=0;document.querySelector('#zizum').dispatchEvent(new Event('change',{bubbles:true}))");
  await ev("document.querySelector('#date').classList.add('selected')");
- assert.equal(await ev("getComputedStyle(document.querySelector('#date')).outlineStyle"),'solid','selection stays visible');
+ assert.equal(await ev("getComputedStyle(document.querySelector('#date')).paddingTop"),'12px','opening hints preserve calendar spacing');
  await ev("document.querySelector('#date').classList.remove('selected')");
  const keyShot=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:true},page.sessionId);
  fs.writeFileSync(path.join(os.tmpdir(),'xre-opening-keyescape.png'),Buffer.from(keyShot.data,'base64'));
@@ -101,9 +111,9 @@ const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  assert.equal((await state()).enabled,false);assert.equal((await state()).dateUnlock.active,true);
  await ev(`document.querySelector('tr').insertAdjacentHTML('beforeend','<td id="next" class="selDate disabled" data-date="2026-12-01">1</td>')`);
  await until(()=>ev("document.querySelector('#next').classList.contains('available')"),'month rerender');
- await until(()=>ev("!!document.querySelector('#next .xr-opening-badge')"),'new month annotated');
+ await until(()=>ev("!!document.querySelector('#next').dataset.xrOpeningLabel"),'new month annotated');
  await ev("document.querySelector('#next').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))");
- assert.match(await ev(`${card}.getElementById('when').textContent`),/2026-11-29 09:30/);
+ assert.match(await ev("document.querySelector('#next').dataset.xrOpeningLabel"),/2026-11-29 09:30/);
  await ev("document.querySelector('#next').className='selDate disabled'");
  await until(()=>ev("document.querySelector('#next').classList.contains('available')"),'class reset');
  const count=(await state()).dateUnlock.count;await ev('new Promise(r=>setTimeout(r,100))');assert.equal((await state()).dateUnlock.count,count);
