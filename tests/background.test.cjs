@@ -44,7 +44,7 @@ test('missing defaults are seeded once without losing existing rules or global s
  const f=fixture();await f.send({type:'sync'});
  const seeded=f.get().config;
  assert.equal(seeded.rules.filter(r=>r.action==='weekdayFallback').length,34);
- assert.equal(seeded.keyescapeDefaultsVersion,2);
+ assert.equal(seeded.keyescapeDefaultsVersion,3);
  const edited={...seeded.rules[0],name:'my edit',enabled:false};
  const after={...seeded,enabled:false,rules:[edited,{id:'custom',name:'keep me'}]};
  await f.send({type:'save',before:structuredClone(seeded),after});
@@ -53,7 +53,7 @@ test('missing defaults are seeded once without losing existing rules or global s
  assert.equal(f.get().config.rules.length,2,'intentional deletion is not undone every sync');
  assert.equal(f.get().config.rules[0].name,'my edit');
 });
-test('version 1 defaults gain missing bundled samples without overwriting user edits',async()=>{
+test('older defaults gain missing bundled samples and weekday groups without overwriting user edits',async()=>{
  const defaults=JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8')).rules;
  const bundled=defaults.find(r=>r.id==='keyescape-weekday-fallback-23-71');
  const old={...structuredClone(bundled),name:'my AYAKO',enabled:false,
@@ -65,12 +65,24 @@ test('version 1 defaults gain missing bundled samples without overwriting user e
 
  const config=f.get().config;
  const migrated=config.rules.find(r=>r.id===old.id);
- assert.equal(config.keyescapeDefaultsVersion,2);
+ assert.equal(config.keyescapeDefaultsVersion,3);
  assert.equal(migrated.name,'my AYAKO');assert.equal(migrated.enabled,false);
  assert.equal(migrated.samples[0].response.data[0].enable,'N');
  assert.ok(migrated.samples.some(s=>s.date==='2026-11-08'));
  assert.equal(migrated.samples.length,bundled.samples.length);
  assert.ok(config.rules.some(r=>r.id==='mine'));
+ assert.deepEqual(structuredClone(config.rules.find(r=>r.id==='keyescape-weekday-fallback-31-96').weekdayGroups),[[1,2,3,4]]);
+});
+test('version 2 eoduksini rule gains its bundled weekday group',async()=>{
+ const bundled=JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8')).rules[0];
+ const old=structuredClone(bundled);delete old.weekdayGroups;old.name='my eoduksini';
+ const f=fixture();f.setConfig({enabled:false,sites:[],rules:[old],keyescapeDefaultsVersion:2});
+
+ await f.send({type:'sync'});
+
+ const migrated=f.get().config.rules.find(r=>r.id===old.id);
+ assert.equal(migrated.name,'my eoduksini');
+ assert.deepEqual(structuredClone(migrated.weekdayGroups),[[1,2,3,4]]);
 });
 test('all bundled defaults validate and contain only the 233 verified schedules',()=>{
  const {rules}=JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8'));

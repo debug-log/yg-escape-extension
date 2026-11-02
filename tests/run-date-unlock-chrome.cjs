@@ -24,7 +24,7 @@ function startChrome(){
 async function stopChrome(){const exited=new Promise(resolve=>child.once('exit',resolve));await call('Browser.close').catch(()=>child.kill());await exited;}
 const deadline=setTimeout(()=>{console.error('Chrome integration deadline exceeded');child?.kill();process.exit(1);},90000);
 
-const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Date fixture</title><style>body{font:16px sans-serif;margin:20px}.reservationPick{max-width:500px}table{width:100%;text-align:center}td{padding:12px}#datepicker{padding:20px;border:1px solid #ddd;border-radius:10px}</style><select id="zizum"><option value="31">백산방역</option><option value="26">에버랜드</option></select><select id="theme"><option value="84" data-doing="3">A</option><option value="34" data-doing="7">B</option></select><div class="reservationPick"><div id="datepicker"><table><tr><td id="date" class="selDate sun disabled endDay" data-date="2026-11-08">8</td><td id="past" title="original hint" style="outline: 1px solid blue; outline-offset: 1px" class="selDate disabled" data-date="2020-01-01">1</td><td id="native" class="selDate available" data-date="2026-11-09">9</td><td id="empty" class="selDate disabled">empty</td></tr></table></div></div><button class="disabled" id="button">Other</button>';
+const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Date fixture</title><style>body{font:16px sans-serif;margin:20px}.reservationPick{max-width:500px}table{width:100%;text-align:center}td{padding:12px}#datepicker{padding:20px;border:1px solid #ddd;border-radius:10px}</style><select id="zizum"><option value="31">백산방역</option><option value="26">에버랜드</option></select><select id="theme"><option value="84" data-doing="3">A</option><option value="34" data-doing="7">B</option></select><div class="reservationPick"><div id="datepicker"><table><tr><td id="date" class="selDate disabled endDay" data-date="2026-11-05">5</td><td id="blocked" class="selDate disabled" data-date="2026-11-06">6</td><td id="past" title="original hint" style="outline: 1px solid blue; outline-offset: 1px" class="selDate disabled" data-date="2020-01-01">1</td><td id="native" class="selDate available" data-date="2026-11-09">9</td><td id="empty" class="selDate disabled">empty</td></tr></table></div></div><button class="disabled" id="button">Other</button>';
 (async()=>{try{
  startChrome();
  const extension=await call('Extensions.loadUnpacked',{path:extensionDir});
@@ -34,22 +34,61 @@ const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  const installed=await evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config)");
  assert.equal(installed.rules.filter(r=>r.action==='weekdayFallback').length,34);
  assert.equal(installed.enabled,false);
- await save({enabled:false,sites:['https://keyescape.com'],rules:[]});
+ await save({enabled:false,sites:['https://keyescape.com'],rules:installed.rules});
  async function fixtureTab(url){const t=await tab('about:blank');await call('Fetch.enable',{patterns:[{urlPattern:'https://keyescape.com/*',resourceType:'Document',requestStage:'Request'}]},t.sessionId);await call('Page.navigate',{url},t.sessionId);await until(()=>evaluate(t.sessionId,"!!document.querySelector('#date')"),'fixture loaded');return {...t,url};}
- const page=await fixtureTab('https://keyescape.com/reservation1.php?zizum_num=31&theme_num=96');
+ const page=await fixtureTab('https://keyescape.com/reservation1.php?zizum_num=31&theme_num=96&theme_info_num=84');
  const ev=expression=>evaluate(page.sessionId,expression);
+ // The site's option value is an info ID; data-themenum is the rule ID.
+ const dropdownPage=await fixtureTab('https://keyescape.com/reservation1.php');
+ const dropdownEv=expression=>evaluate(dropdownPage.sessionId,expression);
+ await dropdownEv(`document.querySelector('#theme').selectedOptions[0].dataset.themenum='96';
+   document.querySelector('tr').insertAdjacentHTML('beforeend','<td id="saturday" class="selDate sat disabled" data-date="2026-11-07">7</td><td id="sunday" class="selDate sun disabled" data-date="2026-11-08">8</td>');
+   document.querySelector('#theme').dispatchEvent(new Event('change',{bubbles:true}));`);
+ await dropdownEv('new Promise(r=>setTimeout(r,100))');
+ async function assertDropdownWeekdays(){
+   assert.equal(await dropdownEv("document.querySelector('#date').classList.contains('available')"),true,'Thursday remains selectable');
+   for(const id of ['blocked','saturday','sunday']){
+     assert.equal(await dropdownEv(`document.getElementById('${id}').classList.contains('disabled')&&!document.getElementById('${id}').classList.contains('available')`),true,`${id} stays disabled without URL theme parameters`);
+     assert.equal(await dropdownEv(`getComputedStyle(document.getElementById('${id}')).backgroundColor`),'rgb(236, 236, 236)');
+     assert.equal(await dropdownEv(`getComputedStyle(document.getElementById('${id}')).cursor`),'not-allowed');
+   }
+ }
+ await assertDropdownWeekdays();
+ await dropdownEv("history.replaceState(null,'','/reservation1.php?zizum_num=31&theme_num=34&theme_info_num=84');document.querySelector('#theme').dispatchEvent(new Event('change',{bubbles:true}))");
+ await dropdownEv('new Promise(r=>setTimeout(r,100))');
+ await assertDropdownWeekdays();
+ await dropdownEv("document.querySelector('#theme').selectedIndex=1;document.querySelector('#theme').dispatchEvent(new Event('change',{bubbles:true}))");
+ await until(()=>dropdownEv("document.querySelector('#blocked').classList.contains('available')"),'switching away clears partial restriction');
+ await dropdownEv("document.querySelector('#theme').selectedIndex=0;document.querySelector('#theme').dispatchEvent(new Event('change',{bubbles:true}))");
+ await until(()=>dropdownEv("document.querySelector('#blocked').classList.contains('disabled')"),'switching back restores partial restriction');
+ await assertDropdownWeekdays();
+ await call('Target.closeTarget',{targetId:dropdownPage.targetId});
  async function state(){return evaluate(options.sessionId,`(async()=>{const tabs=await chrome.tabs.query({});const t=tabs.find(t=>t.url===${JSON.stringify(page.url)});return chrome.tabs.sendMessage(t.id,{type:'state'},{frameId:0});})()`);}
- await until(()=>ev("document.querySelector('#date').classList.contains('available')"),'date opens by default');
- await until(()=>ev("document.querySelector('#past').dataset.xrOpening==='past'"),'opening badges independent of unlock');
+ await until(()=>ev("document.querySelector('#date').classList.contains('available')"),'confirmed weekday opens by default');
+ await until(()=>ev("document.querySelector('#blocked').classList.contains('xr-date-unlock-unconfirmed')"),'unconfirmed weekday is marked unavailable');
+ assert.equal(await ev("document.querySelector('#blocked').classList.contains('disabled')"),true);
+ assert.equal(await ev("getComputedStyle(document.querySelector('#blocked')).backgroundColor"),'rgb(236, 236, 236)');
+ await ev("document.querySelector('#blocked').classList.remove('disabled');document.querySelector('#blocked').classList.add('available')");
+ await until(()=>ev("!document.querySelector('#blocked').classList.contains('xr-date-unlock-unconfirmed')"),'native availability clears unavailable shading');
+ await ev("document.querySelector('#blocked').classList.remove('available');document.querySelector('#blocked').classList.add('disabled')");
+ await until(()=>ev("document.querySelector('#blocked').classList.contains('xr-date-unlock-unconfirmed')"),'native reset restores unavailable shading');
+ await until(()=>ev("!!document.querySelector('#date').dataset.xrOpening"),'future opening hint rendered');
  assert.equal(await ev("document.querySelector('xr-opening-card')"),null,'calendar has no separate opening panel');
- assert.equal(await ev("document.querySelector('#past').classList.contains('available')"),true,'unlocked does not mean open');
- assert.match(await ev("document.querySelector('#date').getAttribute('aria-label')"),/2026-11-06 09:30/);
+ assert.equal(await ev("document.querySelector('#past').classList.contains('disabled')&&!document.querySelector('#past').classList.contains('available')"),true,'past dates stay locked');
+ assert.equal(await ev("document.querySelector('#past').title"),'original hint','past dates do not receive the unlock explanation');
+ assert.equal(await ev("document.querySelector('#past').hasAttribute('data-xr-opening-label')||document.querySelector('#past').hasAttribute('data-xr-opening')||document.querySelector('#past').hasAttribute('aria-label')"),false,'past dates do not receive opening tooltips');
+ assert.match(await ev("document.querySelector('#date').getAttribute('aria-label')"),/2026-11-03 09:30/);
  await ev("document.querySelector('#theme').selectedIndex=1;document.querySelector('#theme').dispatchEvent(new Event('change',{bubbles:true}))");
- assert.match(await ev("document.querySelector('#date').getAttribute('aria-label')"),/2026-11-02 09:30/,'current theme calendar span used');
+ await ev('new Promise(r=>setTimeout(r,100))');
+ assert.equal(await ev("document.querySelector('#date').classList.contains('available')&&!document.querySelector('#date').classList.contains('xr-date-unlock-unconfirmed')"),true,'themes without partial restrictions keep the original unlock behavior');
+ assert.match(await ev("document.querySelector('#date').getAttribute('aria-label')"),/2026-10-30 09:30/,'current theme calendar span used');
  await ev("document.querySelector('#zizum').value='26';document.querySelector('#zizum').dispatchEvent(new Event('change',{bubbles:true}))");
+ await ev('new Promise(r=>setTimeout(r,100))');
+ assert.equal(await ev("document.querySelector('#date').classList.contains('available')"),true,'branches without partial restrictions keep the original unlock behavior');
  assert.match(await ev("document.querySelector('#date').getAttribute('aria-label')"),/오픈 일정 확인 필요/);
  await ev("document.querySelector('#zizum').value='31';document.querySelector('#theme').selectedIndex=0;document.querySelector('#zizum').dispatchEvent(new Event('change',{bubbles:true}))");
- assert.equal(await ev("document.querySelector('#date').textContent"),'8','date number stays free of repeated labels');
+ assert.equal(await ev("document.querySelector('#date').childNodes[0].textContent"),'5','date number stays free of repeated labels');
+ assert.equal(await ev("document.querySelectorAll('#date > .xr-opening-badge').length"),1);
  await ev("document.querySelector('#date').classList.add('selected')");
  assert.equal(await ev("getComputedStyle(document.querySelector('#date')).backgroundColor"),'rgba(0, 0, 0, 0)','opening hints do not recolor native selection');
  await ev("document.querySelector('#date').classList.remove('selected')");
@@ -58,8 +97,8 @@ const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true},page.sessionId);
  assert.equal(await ev('document.documentElement.scrollWidth<=innerWidth'),true);
  await call('Emulation.clearDeviceMetricsOverride',{},page.sessionId);
- assert.equal(await ev("document.querySelector('#date').className"),'selDate sun endDay available');
- assert.equal(await ev("document.querySelector('#past').classList.contains('available')"),true);
+ assert.equal(await ev("document.querySelector('#date').className"),'selDate endDay available');
+ assert.equal(await ev("document.querySelector('#past').classList.contains('disabled')"),true);
  assert.equal(await ev("document.querySelector('#empty').classList.contains('disabled')&&document.querySelector('#button').classList.contains('disabled')"),true);
  assert.equal((await state()).enabled,false);assert.equal((await state()).dateUnlock.active,true);
  await ev(`document.querySelector('tr').insertAdjacentHTML('beforeend','<td id="next" class="selDate disabled" data-date="2026-12-01">1</td>')`);
@@ -90,10 +129,12 @@ const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  assert.equal(await ev("document.querySelector('#next').classList.contains('disabled')"),true);
  // Keep the same document and selected theme when toggling dates.
  assert.equal(await ev("document.querySelector('#date').classList.contains('disabled')"),true);
- await save({keyescapeDateUnlockEnabled:true});await until(()=>ev("document.querySelector('#date').classList.contains('available')"),'reenabled');
+ await save({keyescapeDateUnlockEnabled:true});await until(()=>ev("document.querySelector('#date').classList.contains('available')"),'unknown theme reopens when reenabled');
  assert.equal(await ev("document.querySelector('#theme').selectedIndex"),1);
+ await ev("document.querySelector('#theme').selectedIndex=0;document.querySelector('#theme').dispatchEvent(new Event('change',{bubbles:true}))");
+ await until(()=>ev("document.querySelector('#date').classList.contains('available')"),'confirmed theme opens after selection change');
  // Reusing a cell for a naturally available date must not disable the new date.
- await ev("document.querySelector('#next').setAttribute('data-date','2027-01-01')");
+ await ev("document.querySelector('#next').className='selDate available';document.querySelector('#next').setAttribute('data-date','2027-01-01')");
  await until(()=>ev("document.querySelector('#next').style.backgroundImage===''") ,'reused date clears old decoration');
  await call('Target.activateTarget',{targetId:page.targetId});const popup=await tab('chrome-extension://'+extension.id+'/popup.html',true);
  await until(()=>evaluate(popup.sessionId,"document.querySelector('#dateUnlockState')?.textContent.includes('적용 중')"),'popup date status');
@@ -102,7 +143,7 @@ const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  await until(async()=>(await state()).dateUnlock.active===false,'popup disables dates');
  await until(()=>evaluate(popup.sessionId,"document.querySelector('#dateUnlockState').textContent==='꺼짐'&&document.querySelector('#reload').hidden"),'popup date toggle needs no reload');
  assert.equal(await ev("document.querySelector('#next').classList.contains('available')"),true);
- assert.equal(await ev("document.querySelector('#theme').selectedIndex"),1);
+ assert.equal(await ev("document.querySelector('#theme').selectedIndex"),0);
  await evaluate(popup.sessionId,"document.querySelector('#antiDebugToggle').click()",true);
  await until(()=>evaluate(popup.sessionId,"!document.querySelector('#antiDebugToggle').checked&&document.querySelector('#antiDebugState').textContent.includes('새로고침 필요')"),'popup disables anti-debug');
  assert.ok((await state()).antiDebug.reloadRequired);

@@ -23,16 +23,18 @@
     const theme=option?.value||new URLSearchParams(location.search).get('theme_info_num');
     return {rule:theme?O.rule('keyescape',branch,Number(option?.dataset.doing)):null};
   }
-  function clearCells(){
-    for(const [cell,before] of cells){
-      cell.querySelector(':scope > .xr-opening-badge')?.remove();
-      cell.removeAttribute('data-xr-opening');
-      cell.removeAttribute('data-xr-opening-label');
-      if(cell.getAttribute('aria-label')===before.appliedLabel){
+  function clearCell(cell,before=cells.get(cell)){
+    cell.querySelector(':scope > .xr-opening-badge')?.remove();
+    cell.removeAttribute('data-xr-opening');
+    cell.removeAttribute('data-xr-opening-label');
+    if(before&&cell.getAttribute('aria-label')===before.appliedLabel){
         if(before.label===null)cell.removeAttribute('aria-label');
         else cell.setAttribute('aria-label',before.label);
-      }
     }
+    cells.delete(cell);
+  }
+  function clearCells(){
+    for(const [cell,before] of cells)clearCell(cell,before);
     cells.clear();
   }
   function keyScan(){
@@ -52,6 +54,7 @@
     for(const [cell] of cells)if(!cell.isConnected)cells.delete(cell);
     for(const cell of calendar.querySelectorAll('td.selDate[data-date]')){
       const date=cell.dataset.date,state=O.state(s.rule,date,now);
+      if(state.phase==='past'){clearCell(cell);continue;}
       if(!cells.has(cell))cells.set(cell,{label:cell.getAttribute('aria-label')});
       const phase=state.phase==='upcoming'?(date===dates?.next?'next':'future'):state.phase;
       if(cell.dataset.xrOpening!==phase)cell.dataset.xrOpening=phase;
