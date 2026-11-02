@@ -26,10 +26,10 @@ async function fixture(options = {}) {
     location: {href: 'chrome-extension://test/update.html' + (options.query || '')},
     window: {addEventListener() {}, removeEventListener() {}},
     XREUpdate: {...U, checkRelease: async () => result, verifyDirectory: async () => {},
-      readFile: async () => new TextEncoder().encode('{"version":"1.4.4"}'),
+      readFile: async () => new TextEncoder().encode(JSON.stringify({version: data.journal?.state === 'partial' && options.manifestBlocked ? '1.4.4' : data.journal ? '1.4.5' : '1.4.4'})),
       downloadRelease: async () => { downloads++; await options.downloadGate; return new Uint8Array(); },
       parsePackage: async () => ({version: '1.4.5', manifest: {}}),
-      applyPackage: async () => { data.journal = {state: 'committed', version: '1.4.5'}; }},
+      applyPackage: async () => { data.journal = {state: options.partial ? 'partial' : 'committed', version: '1.4.5', failures: options.partial ? [{name:'update.js',error:'Failed to perform Safe Browsing check.'}] : []}; return data.journal; }},
     XREUpdateCache: {},
     XREUpdateStore: {get: async k => data[k], set: async (k, v) => {data[k] = v;}, delete: async k => {delete data[k];}},
     showDirectoryPicker: async () => {if (options.cancelPicker) throw new DOMException('cancel', 'AbortError'); return directory;},
@@ -160,4 +160,28 @@ test('cancelled initial folder picker keeps setup available', async () => {
   assert.equal(f.elements.setup.hidden, false);
   assert.equal(f.elements.chooseInitial.disabled, false);
   assert.equal(f.data.directory, undefined);
+});
+
+test('partial application restarts and persists only failed files for the notice',async()=>{
+ const f=await fixture({partial:true});await f.elements.install.onclick();
+ assert.equal(f.restarts,1);assert.equal(f.local.updatePending.version,'1.4.5');
+ assert.equal(f.local.updatePartial.failures.length,1);
+ assert.equal(f.local.updatePartial.failures[0].name,'update.js');
+ assert.equal(f.data.journal.state,'partial');
+});
+
+test('blocked manifest restarts the actual disk version without claiming the target version loaded',async()=>{
+ const f=await fixture({partial:true,manifestBlocked:true});await f.elements.install.onclick();
+ assert.equal(f.restarts,1);assert.equal(f.local.updatePending.version,'1.4.4');
+ assert.equal(f.local.updatePartial.version,'1.4.5');
+});
+
+test('partial completion keeps repair available and never displays complete success',async()=>{
+ const f=await fixture({query:'?complete=1',result:{ok:true,version:'1.4.4'},
+  journal:{state:'partial',version:'1.4.4',failures:[{name:'update.js',error:'blocked'}]},
+  releaseResult:{release:{version:'1.4.4'}}});
+ assert.match(f.elements.updateTitle.textContent,/일부 파일 미적용/);
+ assert.equal(f.elements.install.hidden,false);assert.equal(f.elements.install.disabled,false);
+ assert.equal(f.data.journal.state,'partial');
+ assert.doesNotMatch(f.elements.progress.textContent,/적용 완료/);
 });

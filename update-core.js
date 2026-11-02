@@ -232,28 +232,37 @@
   }
 
   async function applyPackage(directory, pkg, store, progress = () => {}) {
-    if (await store.get('journal')) throw Error('이전 업데이트를 먼저 완료하거나 복구해주세요.');
-    const entries = [], backup = [];
+    const previousJournal = await store.get('journal');
+    if (previousJournal && previousJournal.state !== 'partial') throw Error('이전 업데이트를 먼저 완료하거나 복구해주세요.');
+    const entries = [], backup = new Map(previousJournal?.backup || []), failures = [];
     for (const [name, bytes] of [...pkg.files].sort(([a], [b]) => (a === 'manifest.json') - (b === 'manifest.json'))) {
-      const previous = await readFile(directory, name);
-      if (previous && await sha256(previous) === await sha256(bytes)) continue;
-      entries.push([name, bytes]);
-      backup.push([name, previous]);
+      try {
+        const previous = await readFile(directory, name);
+        if (previous && await sha256(previous) === await sha256(bytes)) continue;
+        entries.push([name, bytes]);
+        if (!backup.has(name)) backup.set(name, previous);
+      } catch (error) {
+        failures.push({name, error: error.message});
+      }
     }
-    const journal = {state: 'writing', version: pkg.version, backup};
+    const journal = {state: 'writing', version: pkg.version, backup: [...backup], failures, applied: []};
     await store.set('journal', journal);
-    try {
-      for (const [name, bytes] of entries) {
+    for (const [name, bytes] of entries) {
+      try {
         progress(`업데이트 적용 중 · ${name}`);
         await writeFile(directory, name, bytes);
         if (await sha256(await readFile(directory, name)) !== await sha256(bytes)) throw Error(`기록한 파일 검증 실패: ${name}`);
+        journal.applied.push(name);
+      } catch (error) {
+        failures.push({name, error: error.message});
+        progress(`미적용 · ${name} · 나머지 파일을 계속 적용합니다`);
       }
-      await store.set('journal', {...journal, state: 'committed'});
-    } catch (error) {
-      try { await restoreBackup(directory, store, progress); }
-      catch (recovery) { throw Error(`${error.message}\n자동 복구 실패: ${recovery.message}. 이 탭에서 복구를 다시 실행해주세요.`); }
-      throw Error(`${error.message}\n이전 파일을 복구했습니다.`);
+      // A journal write failure still stops the operation; never lose recovery state.
+      await store.set('journal', journal);
     }
+    journal.state = failures.length ? 'partial' : 'committed';
+    await store.set('journal', journal);
+    return journal;
   }
 
   const api = {REPO, API, MAX_BYTES, compareVersions, selectRelease, checkRelease, sha256, downloadRelease, safePath, parsePackage, readFile, verifyDirectory, applyPackage, restoreBackup};

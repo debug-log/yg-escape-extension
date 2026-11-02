@@ -9,6 +9,15 @@
   <span class="eyebrow">YG Escpae Extension</span>
   <h1>확장 프로그램 업데이트</h1>
   <p class="muted">새 버전을 내려받고 설치 폴더에 적용합니다. 저장한 사이트와 규칙은 유지됩니다.</p>
+  <section id="partialUpdate" class="update-flow" role="status" hidden>
+    <h2>일부 파일 미적용</h2>
+    <p id="partialVersion"></p>
+    <pre id="partialFiles" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
+    <p>새 버전 ZIP을 다운로드해 압축을 풀고, 위 파일만 기존 설치 폴더의 같은 위치에 덮어써주세요. 이후 확장 프로그램을 새로고침해주세요.</p>
+    <p>수동 교체 후 <strong>미적용 파일 다시 적용</strong>을 누르면 배포본과 대조해 확인합니다. 이미 일치하는 파일은 건너뛰며, 모두 확인되면 이 안내가 사라집니다.</p>
+    <p class="muted">기존 파일이 남아 있거나 일부 파일이 없을 수 있습니다. 보안 프로그램이 다시 차단하면 해당 파일은 적용되지 않습니다.</p>
+    <a id="partialDownload" href="https://github.com/debug-log/yg-escape-extension/releases/latest" target="_blank" rel="noopener noreferrer">새 버전 다운로드</a>
+  </section>
   <section class="update-flow" aria-labelledby="updateTitle">
     <span class="eyebrow">업데이트</span>
     <h2 id="updateTitle">새 버전을 확인하고 있습니다</h2>
@@ -51,5 +60,6 @@
 <script src="update-core.js"></script>
 <script src="update-store.js"></script>
 <script src="update.js"></script>
+<script src="update-report.js"></script>
 </body>
 </html>

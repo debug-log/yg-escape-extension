@@ -10,6 +10,7 @@ class UpdatePage {
     this.journal = null;
     this.target = null;
     this.completed = false;
+    this.partial = null;
     this.ready = false;
     this.busy = false;
     this.checking = true;
@@ -31,18 +32,21 @@ class UpdatePage {
   }
 
   hasNewVersion() {
-    return Boolean(this.release && XREUpdate.compareVersions(this.release.version, this.manifest.version) > 0);
+    return Boolean(this.release && (XREUpdate.compareVersions(this.release.version, this.manifest.version) > 0
+      || (this.journal?.state === 'partial' && this.release.version === this.journal.version
+        && XREUpdate.compareVersions(this.release.version, this.manifest.version) >= 0)));
   }
 
   render() {
     const ui = this.elements;
     const available = this.hasNewVersion();
-    const offer = available && !this.checking && !this.checkError && !this.journal && !this.completed;
+    const offer = available && !this.checking && !this.checkError && (!this.journal || this.journal.state === 'partial') && !this.completed;
     const applying = this.stage !== '';
-    ui.version.textContent = available && !this.completed
+    ui.version.textContent = available && !this.completed && XREUpdate.compareVersions(this.release.version, this.manifest.version) > 0
       ? `현재 v${this.manifest.version} → 새 버전 v${this.release.version}`
       : `현재 버전 v${this.manifest.version}`;
     ui.updateTitle.textContent = applying ? '업데이트를 적용하고 있습니다'
+      : this.journal?.state === 'partial' || this.partial ? '일부 파일 미적용'
       : this.journal ? '완료되지 않은 업데이트가 있습니다'
       : this.completed ? '업데이트를 완료했습니다'
       : this.checking ? '새 버전을 확인하고 있습니다'
@@ -59,8 +63,9 @@ class UpdatePage {
     ui.install.hidden = !(offer && this.directory) && !applying;
     ui.install.disabled = !this.ready || this.busy || !offer || !this.directory;
     ui.install.textContent = applying ? '업데이트 중…'
+      : this.journal?.state === 'partial' ? '미적용 파일 다시 적용'
       : available ? `v${this.release.version}로 업데이트` : '새 버전으로 업데이트';
-    ui.finish.hidden = this.journal?.state !== 'committed';
+    ui.finish.hidden = !['committed', 'partial'].includes(this.journal?.state);
     ui.finish.disabled = !this.ready || this.busy;
     ui.recover.hidden = !this.journal;
     ui.recover.disabled = !this.ready || this.busy;
@@ -123,6 +128,8 @@ class UpdatePage {
       this.checkError = result.error || '';
       this.elements.releaseStatus.textContent = this.checkError
         ? `${this.checkError}${this.release ? ` 이전 확인 결과: v${this.release.version}.` : ''} 다시 확인한 후 업데이트해주세요.`
+        : this.journal?.state === 'partial' && this.release?.version === this.journal.version
+          ? `v${this.release.version}의 미적용 파일을 다시 확인하고 적용할 수 있습니다.`
         : this.hasNewVersion() ? `새 버전 v${this.release.version}을 설치할 수 있습니다.`
           : '현재 설치된 버전보다 새로운 배포본이 없습니다.';
     } catch (error) {
@@ -177,7 +184,7 @@ class UpdatePage {
   }
 
   async installRelease() {
-    if (this.journal) throw Error('이전 업데이트를 먼저 완료하거나 복구해주세요.');
+    if (this.journal && this.journal.state !== 'partial') throw Error('이전 업데이트를 먼저 완료하거나 복구해주세요.');
     await this.permitDirectory();
     await this.checkRelease(true);
     if (this.checkError) throw Error('새 버전 확인에 실패했습니다. 다시 확인한 후 업데이트해주세요.');
@@ -197,17 +204,23 @@ class UpdatePage {
       throw Error('Chrome을 먼저 최신 버전으로 업데이트해주세요.');
     }
     this.showStage('Apply', '검증한 파일을 설치 폴더에 적용하고 있습니다…');
-    await XREUpdate.applyPackage(this.directory, candidate, XREUpdateStore,
+    const result = await XREUpdate.applyPackage(this.directory, candidate, XREUpdateStore,
       message => { this.elements.progress.textContent = message; });
-    await this.restart(candidate.version);
+    this.journal = result;
+    this.partial = result.state === 'partial' ? {version: result.version, failures: result.failures} : null;
+    await chrome.storage.local.set({updatePartial: this.partial});
+    await this.restart(await this.diskVersion());
   }
 
   async finishInstallation() {
     await this.permitDirectory();
-    if (this.journal?.state !== 'committed' || await this.diskVersion() !== this.journal.version) {
+    if (!['committed', 'partial'].includes(this.journal?.state)
+        || (this.journal.state === 'committed' && await this.diskVersion() !== this.journal.version)) {
       throw Error('적용한 버전을 확인할 수 없습니다. 이전 파일 복구를 실행해주세요.');
     }
-    await this.restart(this.journal.version);
+    this.partial = this.journal.state === 'partial' ? {version: this.journal.version, failures: this.journal.failures} : null;
+    await chrome.storage.local.set({updatePartial: this.partial});
+    await this.restart(await this.diskVersion());
   }
 
   async recoverInstallation() {
@@ -215,6 +228,8 @@ class UpdatePage {
     this.showStage('Apply', '이전 파일을 복구하고 있습니다…');
     await XREUpdate.restoreBackup(this.directory, XREUpdateStore,
       message => { this.elements.progress.textContent = message; });
+    this.partial = null;
+    await chrome.storage.local.set({updatePartial: null});
     await this.restart(await this.diskVersion());
   }
 
@@ -250,9 +265,11 @@ class UpdatePage {
       this.journal = await XREUpdateStore.get('journal');
       await this.loadTarget(params);
       if (!this.target) ui.reloadPage.checked = false;
-      const {updateResult} = await chrome.storage.local.get('updateResult');
+      const {updateResult, updatePartial} = await chrome.storage.local.get(['updateResult', 'updatePartial']);
+      this.partial = this.journal?.state === 'partial'
+        ? {version: this.journal.version, failures: this.journal.failures} : updatePartial || null;
       if (params.has('complete') && updateResult) {
-        if (updateResult.ok) {
+        if (updateResult.ok && !this.partial) {
           this.completed = true;
           if (this.journal?.state === 'committed' && this.journal.version === this.manifest.version) {
             await XREUpdateStore.delete('journal');
@@ -261,9 +278,10 @@ class UpdatePage {
           ui.progress.textContent = `v${this.manifest.version} 적용 완료. 저장된 설정을 유지했습니다. `
             + (updateResult.pageReloaded ? '원래 페이지도 새로고침했습니다.'
               : '웹페이지는 새로고침하지 않았습니다. 필요하면 직접 새로고침해주세요.');
-        } else ui.error.textContent = updateResult.error;
+        } else if (!updateResult.ok) ui.error.textContent = updateResult.error;
       }
-      if (this.journal) ui.progress.textContent = '완료되지 않은 업데이트가 있습니다. 적용을 마치거나 이전 파일을 복구해주세요.';
+      if (this.partial) ui.progress.textContent = '갱신된 파일은 유지했습니다. 미적용 파일은 아래 목록에서 확인해주세요.';
+      else if (this.journal) ui.progress.textContent = '완료되지 않은 업데이트가 있습니다. 적용을 마치거나 이전 파일을 복구해주세요.';
       this.ready = true;
       await this.checkRelease(false);
     } catch (error) {

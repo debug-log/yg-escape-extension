@@ -82,12 +82,15 @@ test('apply replaces files, writes manifest last and keeps a durable backup',asy
  await U.restoreBackup(dir,store);assert.equal(await fs.readFile(path.join(root,'background.js'),'utf8'),'old worker');
  assert.equal(await fs.readFile(path.join(root,'manifest.json'),'utf8'),'old manifest');assert.equal(await store.get('journal'),undefined);
 });
-test('mid-write failure restores old files and removes newly created files',async t=>{
+test('a blocked file is reported while earlier and later updates remain applied',async t=>{
  const root=await temp(t);await fs.writeFile(path.join(root,'manifest.json'),'old manifest');await fs.writeFile(path.join(root,'background.js'),'old worker');
  let failed=false;const dir=await directory(root,name=>{if(name==='options.html'&&!failed){failed=true;return true;}return false;});const store=memoryStore();
- await assert.rejects(U.applyPackage(dir,await U.parsePackage(archive(files()),'1.4.1'),store),/disk failure/);
- assert.equal(await fs.readFile(path.join(root,'background.js'),'utf8'),'old worker');assert.equal(await fs.readFile(path.join(root,'manifest.json'),'utf8'),'old manifest');
- assert.deepEqual((await fs.readdir(root)).sort(),['background.js','manifest.json']);assert.equal(await store.get('journal'),undefined);
+ const result=await U.applyPackage(dir,await U.parsePackage(archive(files()),'1.4.1'),store);
+ assert.equal(result.state,'partial');assert.deepEqual(result.failures,[{name:'options.html',error:'disk failure'}]);
+ assert.equal(await fs.readFile(path.join(root,'background.js'),'utf8'),'new worker');
+ assert.equal(JSON.parse(await fs.readFile(path.join(root,'manifest.json'),'utf8')).version,'1.4.1');
+ assert.equal(await fs.readFile(path.join(root,'update-store.js'),'utf8'),'update store');
+ assert.equal((await store.get('journal')).state,'partial');
 });
 test('locked files keep recovery journal until a later successful restore',async t=>{
  const root=await temp(t);await fs.writeFile(path.join(root,'manifest.json'),'old manifest');await fs.writeFile(path.join(root,'background.js'),'old worker');
@@ -95,7 +98,8 @@ test('locked files keep recovery journal until a later successful restore',async
   if(name==='options.html'){locked=true;return true;}
   return locked&&name==='background.js';
  });const store=memoryStore();
- await assert.rejects(U.applyPackage(dir,await U.parsePackage(archive(files()),'1.4.1'),store),/자동 복구 실패/);
+ await U.applyPackage(dir,await U.parsePackage(archive(files()),'1.4.1'),store);
+ await assert.rejects(U.restoreBackup(dir,store),/background\.js/);
  assert.equal((await store.get('journal')).state,'writing');
  locked=false;await U.restoreBackup(dir,store);
  assert.equal(await fs.readFile(path.join(root,'background.js'),'utf8'),'old worker');assert.equal(await store.get('journal'),undefined);
@@ -107,6 +111,26 @@ test('a package missing an updater dependency is rejected before installation',a
   const payload=files();delete payload[name];
   await assert.rejects(U.parsePackage(archive(payload),'1.4.1'),/실행 파일/);
  }
+});
+
+test('multiple blocked files including manifest are listed and successful files stay updated',async t=>{
+ const root=await temp(t);await fs.writeFile(path.join(root,'manifest.json'),'old manifest');
+ const dir=await directory(root,name=>['update.js','manifest.json'].includes(name)),store=memoryStore();
+ const result=await U.applyPackage(dir,await U.parsePackage(archive(files()),'1.4.1'),store);
+ assert.deepEqual(result.failures.map(f=>f.name),['update.js','manifest.json']);
+ assert.equal(await fs.readFile(path.join(root,'manifest.json'),'utf8'),'old manifest');
+ assert.equal(await fs.readFile(path.join(root,'background.js'),'utf8'),'new worker');
+});
+
+test('retrying a partial update repairs failed files without rewriting successful files',async t=>{
+ const root=await temp(t),store=memoryStore(),pkg=await U.parsePackage(archive(files()),'1.4.1');
+ await fs.writeFile(path.join(root,'background.js'),'original worker');
+ await U.applyPackage(await directory(root,name=>name==='options.html'),pkg,store);
+ const writes=[];
+ const result=await U.applyPackage(await directory(root,name=>{writes.push(name);return false;}),pkg,store);
+ assert.equal(result.state,'committed');assert.deepEqual(result.failures,[]);assert.deepEqual(writes,['options.html']);
+ await U.restoreBackup(await directory(root),store);
+ assert.equal(await fs.readFile(path.join(root,'background.js'),'utf8'),'original worker');
 });
 
 test('automatic update rejects new privileges and automatic injection surfaces',async()=>{

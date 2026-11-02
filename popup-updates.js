@@ -11,6 +11,13 @@
     window.close();
   };
   try {
+    const {updatePartial} = await chrome.storage.local.get('updatePartial');
+    if (updatePartial?.failures?.length) {
+      status.textContent = `v${version} · 미적용 ${updatePartial.failures.length}개`;
+      button.textContent = '미적용 파일 확인';
+      button.hidden = false;
+      return;
+    }
     const result = await XREUpdate.checkRelease({cache: XREUpdateCache});
     if (result.release && XREUpdate.compareVersions(result.release.version, version) > 0) {
       status.textContent = `v${version} → v${result.release.version}`;

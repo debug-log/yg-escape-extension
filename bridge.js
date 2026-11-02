@@ -10,6 +10,7 @@
 
     const registered = config.sites.includes(location.origin);
     if (typeof XRDateUnlock !== 'undefined') XRDateUnlock.configure(config);
+    if (typeof XRPlay33 !== 'undefined') XRPlay33.configure(config);
     window.postMessage({
       source: 'xr-editor-bridge',
       type: 'config',

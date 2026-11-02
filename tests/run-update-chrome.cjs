@@ -9,6 +9,7 @@ const http=require('node:http');
 const crypto=require('node:crypto');
 const assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..');
+const partialTest=process.env.XRE_UPDATE_PARTIAL_TEST==='1';
 // Windows AppData/Temp is deliberately blocked by File System Access. Use a
 // normal workspace folder, as users do when installing under Documents.
 const temp=fs.mkdtempSync(path.join(process.platform==='win32'?root:os.tmpdir(),'xre-update-chrome-'));
@@ -136,6 +137,10 @@ const deadline=setTimeout(()=>{console.error('Updater integration deadline excee
  await evaluate(s,'releaseTestLock();true');
  await until(()=>evaluate(s,`!document.getElementById('install').disabled`),'button ready after lock refusal');
  console.log('PASS missing-release recovery and concurrent-update exclusion');
+ if(partialTest){
+  // Simulate a rejected native write without weakening Chrome security settings.
+  await evaluate(s,`(()=>{const original=FileSystemFileHandle.prototype.createWritable;FileSystemFileHandle.prototype.createWritable=function(...args){if(this.name==='update.js')return Promise.reject(new DOMException('Failed to perform Safe Browsing check.','AbortError'));return original.apply(this,args);};})()`);
+ }
  // Real UI click -> GitHub-shaped response -> ZIP hashes -> native writes -> reload.
  await evaluate(s,`document.getElementById('install').click()`,true);
  await until(()=>evaluate(s,`document.getElementById('progress').textContent.includes('다운로드') || document.getElementById('progress').textContent.includes('적용') || document.getElementById('error').textContent`).catch(()=>true),'install started');
@@ -148,15 +153,26 @@ const deadline=setTimeout(()=>{console.error('Updater integration deadline excee
   return false;
  },'automatic restart completion',45000);
  const {sessionId:after}=await call('Target.attachToTarget',{targetId:completed.targetId,flatten:true});await intercept(after);
- await until(()=>evaluate(after,`document.getElementById('progress')?.textContent.includes('적용 완료')`).catch(()=>false),'completion message');
+ await until(()=>evaluate(after,`!document.getElementById('partialUpdate')?.hidden || document.getElementById('progress')?.textContent.includes('적용 완료')`).catch(()=>false),'completion message');
+ const appliedJournal=await evaluate(after,'XREUpdateStore.get("journal")');
+ const endedPartial=appliedJournal?.state==='partial';
  const result=await evaluate(after,`chrome.storage.local.get(['config','updateResult','updatePending'])`);
  assert.equal(result.updateResult.ok,true);assert.equal(result.updateResult.version,version);assert.equal(result.updateResult.pageReloaded,true);assert.equal(result.updatePending,undefined);
  assert.ok(result.config.rules.some(r=>r.id==='personal'&&r.name==='preserve me'));
- assert.equal(await evaluate(after,'XREUpdateStore.get("journal")'),undefined);
+ if(partialTest)assert.equal(endedPartial,true);
+ if(endedPartial){
+  const journal=appliedJournal;
+  console.log('PARTIAL FILES',JSON.stringify(journal.failures));
+  if(partialTest)assert.deepEqual(journal.failures.map(f=>f.name),['update.js']);
+  assert.equal(await evaluate(after,`document.getElementById('partialFiles').textContent`),journal.failures.map(f=>f.name).join('\n'));
+  assert.match(await evaluate(after,`document.getElementById('partialDownload').href`),new RegExp('/tag/v'+version+'$'));
+  await until(()=>evaluate(after,`!document.getElementById('install').disabled`),'repair offer after release check');
+ }else assert.equal(await evaluate(after,'XREUpdateStore.get("journal")'),undefined);
  assert.equal(await evaluate(original.sessionId,`performance.getEntriesByType('navigation')[0].type`),'reload');
  assert.equal(downloads,1);assert.equal(JSON.parse(fs.readFileSync(path.join(installed,'manifest.json'))).version,version);
  assert.match(fs.readFileSync(path.join(installed,'style.css'),'utf8'),/updated integration fixture/);
- assert.match(fs.readFileSync(path.join(installed,'update.js'),'utf8'),/Updated controller integration fixture/);
+ if(partialTest)assert.doesNotMatch(fs.readFileSync(path.join(installed,'update.js'),'utf8'),/Updated controller integration fixture/);
+ else if(!appliedJournal?.failures?.some(f=>f.name==='update.js'))assert.match(fs.readFileSync(path.join(installed,'update.js'),'utf8'),/Updated controller integration fixture/);
  await screenshot(after,'update-complete');
  await screenshot(after,'update-complete-narrow',375);
  if(process.platform==='win32'&&process.env.XRE_DEFENDER_SCAN==='1'){
@@ -169,7 +185,7 @@ const deadline=setTimeout(()=>{console.error('Updater integration deadline excee
  }
  await call('Emulation.setDeviceMetricsOverride',{width:900,height:1100,deviceScaleFactor:1,mobile:false},after);
  const shot=await call('Page.captureScreenshot',{format:'png'},after);fs.writeFileSync(path.join(os.tmpdir(),'xre-update-complete.png'),Buffer.from(shot.data,'base64'));
- console.log('PASS production updater: ZIP downloaded, files verified/replaced, extension restarted, settings retained, original page reloaded, journal cleared');
+ console.log(endedPartial ? 'PASS partial updater: blocked file skipped, other files retained, extension restarted, failed-file report and download link persisted' : 'PASS production updater: ZIP downloaded, files verified/replaced, extension restarted, settings retained, original page reloaded, journal cleared');
 }catch(e){console.error(e);process.exitCode=1;}finally{
  clearTimeout(deadline);if(child){const exited=child.exitCode===null?new Promise(resolve=>child.once('exit',resolve)):Promise.resolve();try{await call('Browser.close');}catch{child.kill();}await exited;}
  socket?.close();
