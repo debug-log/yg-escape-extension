@@ -154,7 +154,7 @@ const deadline=setTimeout(()=>{console.error('Updater integration deadline excee
   return false;
  },'automatic restart completion',45000);
  const {sessionId:after}=await call('Target.attachToTarget',{targetId:completed.targetId,flatten:true});await intercept(after);
- await until(()=>evaluate(after,`!document.getElementById('partialUpdate')?.hidden || document.getElementById('progress')?.textContent.includes('적용 완료')`).catch(()=>false),'completion message');
+ await until(()=>evaluate(after,`document.readyState === 'complete' && typeof XREUpdateStore !== 'undefined' && ((document.getElementById('partialUpdate') && !document.getElementById('partialUpdate').hidden) || document.getElementById('progress')?.textContent.includes('적용 완료'))`).catch(()=>false),'completion message in loaded updater');
  const appliedJournal=await evaluate(after,'XREUpdateStore.get("journal")');
  const endedPartial=appliedJournal?.state==='partial';
  const result=await evaluate(after,`chrome.storage.local.get(['config','updateResult','updatePending'])`);
