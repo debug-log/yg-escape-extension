@@ -9,6 +9,7 @@
     if (version !== revision) return;
 
     const registered = config.sites.includes(location.origin);
+    const response = XRSettings.responseConfig(config, location.origin);
     if (typeof XRDateUnlock !== 'undefined') XRDateUnlock.configure(config);
     if (typeof XRPlay33 !== 'undefined') XRPlay33.configure(config);
     if (typeof XROpeningUI !== 'undefined') XROpeningUI.configure(config);
@@ -19,8 +20,8 @@
         enabled: registered && !(config.antiDebugDisabledSites || []).includes(location.origin)
       },
       config: {
-        enabled: window === window.top && config.enabled && registered,
-        rules: config.rules.filter(rule => rule.site === location.origin)
+        enabled: window === window.top && response.enabled,
+        rules: response.rules
       }
     }, location.origin);
   }
@@ -63,7 +64,8 @@
         ...state,
         antiDebug,
         dateUnlock: typeof XRDateUnlock !== 'undefined' ? XRDateUnlock.getState() : null,
-        play33: typeof XRPlay33 !== 'undefined' ? XRPlay33.getState() : null
+        play33: typeof XRPlay33 !== 'undefined' ? XRPlay33.getState() : null,
+        opening: typeof XROpeningUI !== 'undefined' ? XROpeningUI.getState() : null
       });
     }
   });

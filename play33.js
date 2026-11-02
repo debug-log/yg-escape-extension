@@ -33,7 +33,7 @@
   if(root.XRPlay33)return;
 
   const keys=['branch','theme','date','time'];
-  let active=false,host=null,form=null,inputs=null,original=null,lastApplied=null,opening=null;
+  let active=false,host=null,form=null,inputs=null,original=null,lastApplied=null;
   const eligible=()=>window===window.top&&location.origin==='https://play33.kr'&&location.pathname==='/reservation/create';
   const read=()=>Object.fromEntries(keys.map(k=>[k,inputs[k].value]));
   function write(values){
@@ -43,14 +43,12 @@
   }
   function stop(){
     active=false;observer.disconnect();
-    opening?.dispose();opening=null;
     if(inputs&&lastApplied&&keys.every(k=>inputs[k].value===lastApplied[k]))write(original);
     host?.remove();host=form=inputs=original=lastApplied=null;
   }
   function scan(){
     if(!active||!eligible())return;
     if(host?.isConnected&&form?.isConnected&&keys.every(k=>form.contains(inputs[k])))return;
-    opening?.dispose();opening=null;
     host?.remove();host=form=inputs=original=lastApplied=null;
     for(const candidate of document.forms){
       const fields=Object.fromEntries(keys.map(k=>[k,candidate.querySelector(`input[type="hidden"][name="${k}"]`)]));
@@ -65,27 +63,20 @@
     const shadow=host.attachShadow({mode:'open'});
     shadow.innerHTML=`<style>
       :host{display:block;position:relative;z-index:1;margin:24px auto;width:calc(100% - 32px);max-width:960px;color:#242424;text-align:left;color-scheme:light;font:14px/1.5 "Pretendard","Malgun Gothic",sans-serif}
-      *{box-sizing:border-box}section{background:#fff;border:1px solid #d9d9d9;border-top:4px solid #cf351e;padding:22px 24px;border-radius:8px}
-      header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}h2{margin:0;font-size:20px;font-weight:750;letter-spacing:-.5px}button{border:1px solid #ccc;border-radius:5px;background:#fff;padding:8px 12px;color:#444;font:inherit;cursor:pointer}
+      *{box-sizing:border-box}section{background:#fff;border:1px solid #d9d9d9;border-top:4px solid #d92130;padding:22px 24px;border-radius:8px}
+      header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}h2{margin:0;font-size:20px;font-weight:750;letter-spacing:-.5px}button{border:1px solid #ccc;border-radius:8px;background:#fff;padding:8px 12px;color:#444;font:inherit;cursor:pointer}
       .fields{display:grid;grid-template-columns:1fr 1.5fr 1.2fr 1fr;gap:14px}label{display:flex;flex-direction:column;gap:6px;font-weight:650}
-      select,input{width:100%;min-width:0;height:42px;border:1px solid #bbb;border-radius:5px;background:#fff;color:#222;padding:8px;font:inherit;font-weight:400}
-      :focus-visible{outline:3px solid #cf351e;outline-offset:2px}p{margin:12px 0 0}.status{color:#9b2716;font-weight:650}.note{font-size:12px;color:#666}output{display:block;overflow-wrap:anywhere;font-size:12px;color:#555;margin-top:6px}
+      select,input{width:100%;min-width:0;height:42px;border:1px solid #bbb;border-radius:8px;background:#fff;color:#222;padding:8px;font:inherit;font-weight:400}
+      :focus-visible{outline:3px solid #d92130;outline-offset:2px}p{margin:12px 0 0}.status{color:#a31a26;font-weight:650}.note{font-size:12px;color:#666}output{display:block;overflow-wrap:anywhere;font-size:12px;color:#555;margin-top:6px}
       @media(max-width:640px){section{padding:18px 16px}.fields{grid-template-columns:1fr 1fr}header{align-items:flex-start}h2{font-size:18px}button{font-size:12px;white-space:nowrap}}
       @media(max-width:360px){.fields{grid-template-columns:1fr}}
     </style><section aria-label="플레이33 예약 선택">
-      <header><h2>예약 선택 변경</h2><button type="button" id="restore">원래 값으로</button></header>
+      <header><h2>예약 선택 패널</h2><button type="button" id="restore">처음 선택으로 복원</button></header>
       <div class="fields"><label>지점<select id="branch"></select></label><label>테마<select id="theme"></select></label><label>날짜<input id="date" type="date"></label><label>시간<select id="time"></select></label></div>
       <p class="status" role="status" id="status"></p><output id="values"></output>
       <p class="note">시간표는 2026년 11월 2~8일에 확인한 정보입니다. 공휴일 운영 시간이나 현재 남은 자리는 반영하지 않아 실제 예약 가능 여부와 다를 수 있습니다.<br>지점이나 테마를 바꿔도 이 페이지의 인원·요금·안내는 처음 선택한 테마 기준으로 표시됩니다.</p>
     </section>`;
     const ui=Object.fromEntries([...keys,'status','values','restore'].map(k=>[k,shadow.getElementById(k)]));
-    if(root.XROpeningUI){
-      opening=root.XROpeningUI.create(()=>({site:'play33',branch:ui.branch.value,date:ui.date.value,
-        rule:root.XROpening.rule('play33',ui.branch.value)}),date=>{
-        ui.date.value=date;hours(ui.time.value);apply();
-      });
-      shadow.querySelector('.fields').after(opening.host);
-    }
     function options(select,items,preferred,keepUnknown=false){
       select.replaceChildren(...items.map(([value,label])=>new Option(label,value)));
       if(keepUnknown&&preferred&&!items.some(([v])=>v===preferred))select.add(new Option(`${preferred} (현재 값)`,preferred));
@@ -97,14 +88,14 @@
     function hours(preferred,keepUnknown=false){
       options(ui.time,times(ui.branch.value,ui.theme.value,ui.date.value).map(t=>[t,t]),preferred,keepUnknown);
     }
-    function showValues(){ui.values.textContent='선택한 지점·테마·날짜·시간으로 예약을 요청합니다. 아직 예약이 완료된 것은 아닙니다.';opening?.render();}
+    function showValues(){ui.values.textContent='선택한 지점·테마·날짜·시간으로 예약을 요청합니다. 아직 예약이 완료된 것은 아닙니다.';root.XROpeningUI?.refresh();}
     function reset(){
       options(ui.branch,branches.map(b=>[b.id,b.name]),original.branch,true);
       themes(original.theme,true);ui.date.value=original.date;hours(original.time,true);
       ui.status.textContent='현재 예약 정보를 불러왔습니다.';showValues();
     }
     function apply(){
-      opening?.render();
+      root.XROpeningUI?.refresh();
       if(!form.isConnected||!keys.every(k=>form.contains(inputs[k]))){ui.status.textContent='예약 폼이 바뀌었습니다. 페이지를 다시 확인해주세요.';return;}
       const selected=Object.fromEntries(keys.map(k=>[k,ui[k].value]));
       if(!times(selected.branch,selected.theme,selected.date).includes(selected.time)){
@@ -122,10 +113,12 @@
     ui.restore.addEventListener('click',()=>{write(original);lastApplied=null;reset();ui.status.textContent='처음 선택한 예약 정보로 되돌렸습니다.';});
     reset();
     form.prepend(host);
+    root.XROpeningUI?.refresh();
   }
   const observer=new MutationObserver(scan);
   root.XRPlay33={getState(){return {ready:true,eligible:eligible(),active:!!host?.isConnected};},configure(config){
-    if(!eligible()||!config.sites.includes(location.origin)||config.play33Enabled===false){stop();return;}
+    const helper=XRSettings.helperState(config,location.origin);
+    if(!eligible()||!helper.registered||!helper.enabled||!helper.play33){stop();return;}
     if(active)return;
     active=true;observer.observe(document,{childList:true,subtree:true});scan();
   }};

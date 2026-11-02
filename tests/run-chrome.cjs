@@ -34,9 +34,10 @@ const deadline=setTimeout(()=>{console.error('Browser test deadline exceeded');c
   quickEditing='scoped';resetQuick();if(quickEditing!==null||$('quickName').value)throw Error('new quick setting did not reset');
   showMode(true);$('quickPage').value='https://keyescape.com/reservation1.php?zizum_num=31&theme_num=96';$('quickName').value='테스트 테마';$('quickReplacement').value=JSON.stringify({status:true,data:[{theme_num:96,hh:'09',mm:'25',enable:'Y'}]});quickPreview();
   const savedRules=config.rules;
-  config.rules=[{id:'one',site:'https://keyescape.com',name:'STATION · 내 방 · 이전 같은 요일',action:'weekdayFallback',enabled:true,samples:[{date:'2026-11-05'}]},{id:'two',site:'https://other.example',name:'STATION',action:'patch',enabled:false}];
-  renderQuick();if(document.querySelectorAll('.site-group').length!==2||document.querySelectorAll('.rule-group').length!==1)throw Error('sites or branch grouping mixed');
-  $('ruleSearch').value='other.example';renderQuick();if(document.querySelectorAll('.site-group').length!==1||!$('quickRules').textContent.includes('STATION')||$('quickRules').textContent.includes('내 방'))throw Error('site search failed');
+  const bundled=savedRules.find(XRSettings.isBundledRule);
+  config.rules=[{...bundled,name:'STATION · 내 방 · 이전 같은 요일'},{id:'two',site:'https://other.example',name:'STATION',action:'patch',enabled:false}];
+  renderQuick();if(document.querySelectorAll('.site-group').length!==1||document.querySelectorAll('.rule-group').length!==1)throw Error('bundled schedule grouping mixed with user rules');
+  $('ruleSearch').value='other.example';renderQuick();if(document.querySelectorAll('.site-group').length!==0)throw Error('custom rule leaked into helper schedules');
   $('ruleSearch').value='내 방';renderQuick();if(!document.querySelector('.site-group').open||!document.querySelector('.rule-group').open)throw Error('search did not expand matching hierarchy');
   $('collapseRules').click();if(document.querySelectorAll('.site-group[open],.rule-group[open]').length)throw Error('collapse all failed');
   config.rules=savedRules;renderQuick();

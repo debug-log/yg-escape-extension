@@ -3,158 +3,128 @@
   const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
   let origin, page;
   try {
-    page = new URL(tab.url);
+    page = new URL(tab?.url);
     if (['http:', 'https:'].includes(page.protocol)) {
       origin = page.origin;
       await chrome.storage.session.set({pageContext: {url: page.href}});
     }
   } catch {}
-  $('site').textContent = (origin ? page.host : '웹페이지를 열어주세요');
+  const key = origin === 'https://keyescape.com', play = origin === 'https://play33.kr';
+  const supported = key || play;
+  $('site').textContent = key ? '키이스케이프' : play ? '플레이33' : origin ? page.host : '웹페이지를 열어주세요';
+  $('siteAddress').textContent = supported ? page.host : '';
+  $('helperFeatures').hidden = !supported;
+  $('dateUnlockFeature').hidden = !key;
+  $('timetableFeature').hidden = !key;
+  $('play33Feature').hidden = !play;
+  $('activity').hidden = !key;
+  $('manage').onclick = () => chrome.runtime.openOptionsPage();
+  $('reload').onclick = () => { chrome.tabs.reload(tab.id); window.close(); };
 
+  let busy = false, revision = 0;
+  const controls = ['helperToggle', 'openingToggle', 'dateUnlockToggle', 'timetableToggle', 'play33Toggle', 'addCurrentSite'];
   async function sendCommand(message) {
     const result = await chrome.runtime.sendMessage(message);
     if (!result || typeof result.ok !== 'boolean') {
       throw Error('확장 프로그램의 응답이 없습니다. chrome://extensions에서 이 확장 프로그램을 새로고침한 뒤 다시 시도해주세요.');
     }
-    if (!result.ok) throw Error(result.error || '설정을 처리하지 못했습니다.');
+    if (!result.ok) throw Error(result.error || '설정을 저장하지 못했습니다. 다시 시도해주세요.');
     return result;
   }
-
-  let busy = false;
-  const box = $('enabled');
-  box.onchange = async () => {
-    try {
-      await sendCommand({type: 'enabled', enabled: box.checked});
-      await refresh();
-    } catch (error) {
-      $('state').textContent = error.message;
-    }
-  };
-  $('manage').onclick = () => chrome.runtime.openOptionsPage();
-  $('reload').onclick = () => {
-    chrome.tabs.reload(tab.id);
-    window.close();
-  };
-
-  async function changeSiteSetting(setting, enabled) {
-    if (busy || !origin) return;
+  async function change(setting, enabled) {
+    if (busy || !supported) return;
     busy = true;
-    for (const id of ['dateUnlockToggle', 'play33Toggle', 'antiDebugToggle', 'addCurrentSite']) $(id).disabled = true;
+    ++revision;
+    controls.forEach(id => $(id).disabled = true);
     $('popupMessage').textContent = '';
+    $('popupMessage').className = '';
     try {
-      // Request directly from the click gesture, before any storage reads.
-      const granted = await chrome.permissions.request({origins: [origin + '/*']});
-      if (!granted) throw Error('사이트 접근 권한이 허용되지 않아 설정을 변경하지 않았습니다.');
-      await sendCommand({type: 'siteSetting', site: origin, setting, enabled});
-      $('popupMessage').textContent = setting === 'register'
-        ? '사이트를 추가했습니다. 새로고침하여 적용해주세요.' : '저장 완료';
+      if (setting === 'startHelper') {
+        const granted = await chrome.permissions.request({origins: [origin + '/*']});
+        if (!granted) throw Error('사이트 접근 권한이 허용되지 않아 시작하지 않았습니다. 사용 시작을 눌러 다시 허용해주세요.');
+      }
+      const command = {type: 'siteSetting', site: origin, setting};
+      if (typeof enabled === 'boolean') command.enabled = enabled;
+      await sendCommand(command);
+      $('popupMessage').textContent = setting === 'startHelper'
+        ? key ? '오픈 일정 안내·날짜 선택 제한 해제·기본 시간표를 켰습니다.' : '오픈 일정 안내·예약 선택 패널을 켰습니다.'
+        : setting === 'helper' && !enabled ? '이 사이트의 예약 도우미를 껐습니다. 기능별 선택은 유지됩니다.' : '설정을 저장했습니다.';
     } catch (error) {
-      $('popupMessage').textContent = error.message;
+      $('popupMessage').textContent = error.message; $('popupMessage').className = 'is-error';
     } finally {
       busy = false;
       await refresh();
     }
   }
-  $('dateUnlockToggle').onchange = () => changeSiteSetting('dateUnlock', $('dateUnlockToggle').checked);
-  $('play33Toggle').onchange = () => changeSiteSetting('play33', $('play33Toggle').checked);
-  $('antiDebugToggle').onchange = () => changeSiteSetting('antiDebug', $('antiDebugToggle').checked);
-  $('addCurrentSite').onclick = () => {
-    if ($('addCurrentSite').disabled) return;
-    return changeSiteSetting('register');
-  };
-
-  function matchesPage(rule) {
-    return rule.enabled && rule.site === origin && (!rule.pageParams
-      || Object.entries(rule.pageParams).every(([key, value]) => page?.searchParams.get(key) === value));
+  for (const [id, setting] of [['helperToggle', 'helper'], ['openingToggle', 'opening'], ['dateUnlockToggle', 'dateUnlock'], ['timetableToggle', 'timetable'], ['play33Toggle', 'play33']]) {
+    $(id).onchange = () => change(setting, $(id).checked);
   }
-
-  function responseStatus(registered, enabled, rules, state) {
-    if (!registered) return '사이트 등록 필요';
-    if (!enabled) return '꺼짐';
-    if (!rules.length) return '사용 중인 규칙 없음';
-    if (state.ready && state.enabled) return '사용 중';
-    return '적용 중';
-  }
-
-  function dateSettingText(eligible, registered, desired) {
-    if (!eligible) return '키이스케이프 예약 페이지 전용';
-    if (!registered) return '사이트 미등록';
-    return desired ? '새로고침 필요' : '꺼짐';
-  }
+  $('addCurrentSite').onclick = () => { if (!$('addCurrentSite').disabled) return change('startHelper'); };
 
   async function refresh() {
     if (busy) return;
+    const version = ++revision;
     const {config = {enabled: false, rules: [], sites: []}} = await chrome.storage.local.get('config');
-    if (busy) return;
-    box.checked = config.enabled;
-    const rules = config.rules.filter(matchesPage);
-    const registered = config.sites.includes(origin);
-    $('addCurrentSite').disabled = !origin || registered;
-    $('addCurrentSite').textContent = !origin ? '웹페이지에서 사이트를 추가하세요'
-      : registered ? '현재 사이트 등록됨' : '현재 사이트 추가';
-    const play33Site = origin === 'https://play33.kr';
-    const play33Eligible = play33Site && page?.pathname === '/reservation/create';
-    const play33Desired = registered && config.play33Enabled !== false;
-    $('play33Toggle').disabled = !play33Site;
-    $('play33Toggle').checked = play33Site && play33Desired;
-    $('play33Feature').hidden = !play33Site;
-    const play33Text = !registered ? '10개 테마 기본 제공 · 사이트를 추가해주세요'
-      : !play33Desired ? '꺼짐'
-      : !play33Eligible ? '10개 테마 기본 제공 · 예약 정보 입력 페이지에서 사용'
-      : '10개 테마 기본 제공 · 새로고침 필요';
-    $('dateUnlockFeature').hidden = origin !== 'https://keyescape.com';
-    const dateEligible = origin === 'https://keyescape.com' && page?.pathname === '/reservation1.php';
-    const dateDesired = dateEligible && registered && config.keyescapeDateUnlockEnabled !== false;
-    const dateText = dateSettingText(dateEligible, registered, dateDesired);
-    const antiDesired = registered && !(config.antiDebugDisabledSites || []).includes(origin);
-
-    $('dateUnlockToggle').disabled = origin !== 'https://keyescape.com';
-    $('dateUnlockToggle').checked = origin === 'https://keyescape.com' && registered && config.keyescapeDateUnlockEnabled !== false;
-    $('antiDebugToggle').disabled = !origin;
-    $('antiDebugToggle').checked = antiDesired;
-    $('rule').textContent = rules.length ? `사용 중인 규칙 ${rules.length}개` : '사용 중인 규칙 없음';
-
-    try {
-      const state = await chrome.tabs.sendMessage(tab.id, {type: 'state'}, {frameId: 0});
-      if (busy) return;
-      $('state').textContent = responseStatus(registered, config.enabled, rules, state);
-
-      const anti = state.antiDebug;
-      const antiReload = !!origin && (!anti?.ready || anti.reloadRequired || anti.active !== antiDesired);
-      const date = state.dateUnlock;
-      const dateReload = !!date?.reloadRequired || (dateDesired && !date?.ready);
-      const play33Reload = play33Eligible && play33Desired && !state.play33?.ready;
-      $('reload').hidden = !(antiReload || dateReload || play33Reload);
-      $('play33State').textContent = play33Text;
-      if (play33Eligible && play33Desired && state.play33?.ready) {
-        $('play33State').textContent = state.play33.active ? '적용 중 · 10개 테마 기본 제공'
-          : '예약 폼을 기다리는 중 · 시간대를 선택해 입장해주세요';
-      }
-
-      $('dateUnlockState').textContent = dateReload ? '새로고침 필요'
-        : dateDesired && date?.active ? '적용 중' : dateText;
-      $('antiDebugState').textContent = anti?.error ? '초기화 실패'
-        : antiReload ? '새로고침 필요' : antiDesired ? '적용 중' : '꺼짐';
-
-      const last = state.last;
-      $('last').textContent = last
-        ? `${state.count}건 변경 · ${new Date(last.at).toLocaleTimeString()}${last.items !== null ? ' · 시간대 ' + last.items + '개' : ''}`
-        : '변경 기록 없음';
-    } catch {
-      if (busy) return;
-      $('play33State').textContent = play33Text;
-      $('dateUnlockState').textContent = dateText;
-      $('antiDebugState').textContent = antiDesired ? '새로고침 필요' : '꺼짐';
-      $('state').textContent = registered ? '새로고침 필요' : '사이트 등록 필요';
-      $('reload').hidden = !origin;
+    let state = null;
+    if (origin && supported) {
+      try { state = await chrome.tabs.sendMessage(tab.id, {type: 'state'}, {frameId: 0}); } catch {}
     }
+    if (busy || version !== revision) return;
+    const helper = XRSettings.helperState(config, origin);
+    const active = helper.registered && helper.enabled;
+    $('helperToggle').checked = helper.enabled && helper.registered;
+    $('helperToggle').disabled = !supported || !helper.registered;
+    $('addCurrentSite').hidden = !supported || helper.registered;
+    $('addCurrentSite').disabled = !supported || helper.registered;
+    for (const [id, choice] of [['openingToggle', helper.opening], ['dateUnlockToggle', helper.dateUnlock], ['timetableToggle', helper.timetable], ['play33Toggle', helper.play33]]) {
+      $(id).checked = choice;
+      $(id).disabled = !active;
+    }
+    const eligibleDate = key && page.pathname === '/reservation1.php';
+    const eligiblePlay = play && page.pathname === '/reservation/create';
+    const eligibleOpening = eligibleDate || play && ['/reservation', '/reservation/create'].includes(page.pathname);
+    let reload = false;
+    function status(chosen, eligible, actual, waiting) {
+      if (!helper.registered) return '사용 시작 후 적용';
+      if (!helper.enabled) return '예약 도우미 꺼짐 · 선택 유지';
+      if (!chosen) return '꺼짐';
+      if (!eligible) return waiting;
+      if (!state || !actual?.ready || actual.reloadRequired) { reload = true; return '새로고침 필요'; }
+      return actual.active ? '사용 중' : '페이지에서 대상 요소를 기다리는 중';
+    }
+    const openingText = status(helper.opening, eligibleOpening, state?.opening, '예약 목록·입력 페이지에서 사용');
+    const dateText = status(helper.dateUnlock, eligibleDate, state?.dateUnlock, '예약 날짜 선택 페이지에서 사용');
+    const playText = status(helper.play33, eligiblePlay, state?.play33, '예약 정보 입력 페이지에서 사용');
+    const timetableRules = config.rules.filter(rule => XRSettings.isBundledRule(rule) && rule.enabled);
+    let timetableText;
+    if (!helper.registered) timetableText = '사용 시작 후 적용';
+    else if (!helper.enabled) timetableText = '예약 도우미 꺼짐 · 선택 유지';
+    else if (!helper.timetable) timetableText = '꺼짐';
+    else if (!eligibleDate) timetableText = '예약 날짜 선택 페이지에서 사용';
+    else if (!timetableRules.length) timetableText = '켜진 테마 규칙 없음 · 설정에서 선택';
+    else if (!state?.ready) { timetableText = '새로고침 필요'; reload = true; }
+    else timetableText = '켜짐 · 조건에 맞는 요청부터 적용';
+    $('openingState').textContent = openingText;
+    $('dateUnlockState').textContent = dateText;
+    $('play33State').textContent = playText;
+    $('state').textContent = timetableText;
+    const hasFeatures = helper.opening || key && (helper.dateUnlock || helper.timetable) || play && helper.play33;
+    $('helperState').textContent = !supported ? origin ? '예약 도우미를 지원하지 않는 사이트입니다.' : '이 페이지에서는 예약 도우미를 사용할 수 없습니다.'
+      : !helper.registered ? '사용 전 · 사이트 접근 권한이 필요합니다.'
+      : !helper.enabled ? '예약 도우미 꺼짐'
+      : !hasFeatures ? '켜진 기능 없음' : reload ? '설정 저장됨 · 새로고침 필요' : '예약 도우미 켜짐';
+    $('helperState').className = 'helper-state' + (active && hasFeatures ? reload ? ' is-pending' : ' is-on' : '');
+    $('helperNote').textContent = !supported ? origin ? '일반 사이트의 응답 규칙은 설정 → 고급 설정에서 관리하세요.' : '키이스케이프 또는 플레이33 예약 사이트에서 열어주세요.'
+      : !helper.registered ? '사용 시작을 누르면 이 사이트의 기본 기능을 함께 켭니다.'
+      : !helper.enabled ? '다시 켜면 이전에 선택한 기능을 복원합니다. 사용자 응답 규칙은 고급 설정에서 별도로 관리합니다.'
+      : '오픈 시각과 실제 잔여석은 다를 수 있습니다. 예약 가능 여부는 사이트에서 확인하세요.';
+    $('activity').hidden = !key || !active || !helper.timetable;
+    $('rule').textContent = timetableRules.length ? `켜진 테마 시간표 ${timetableRules.length}개` : '켜진 테마 규칙 없음 · 설정에서 선택';
+    const last = state?.last;
+    $('last').textContent = last ? `이 페이지 응답 ${state.count}건 변경 · ${new Date(last.at).toLocaleTimeString('ko-KR')}` : '';
+    $('reload').hidden = !supported || !active || !reload;
   }
-
-  try {
-    await sendCommand({type: 'sync'});
-  } catch (error) {
-    $('popupMessage').textContent = error.message;
-  }
+  try { await sendCommand({type: 'sync'}); } catch (error) { $('popupMessage').textContent = error.message; $('popupMessage').className = 'is-error'; }
   await refresh();
   setInterval(() => refresh().catch(() => {}), 1000);
 })();

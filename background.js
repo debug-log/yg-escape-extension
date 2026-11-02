@@ -44,7 +44,11 @@ async function addDefaultRules(config) {
 async function sync() {
   let {config} = await chrome.storage.local.get('config');
   if (!config) {
-    config = initial;
+    config = structuredClone(initial);
+    await chrome.storage.local.set({config});
+  }
+  if (typeof config.keyescapeTimetableEnabled !== 'boolean') {
+    config = {...config, keyescapeTimetableEnabled: !!config.enabled};
     await chrome.storage.local.set({config});
   }
 
@@ -77,7 +81,7 @@ async function sync() {
   const matches = allowed.map(site => site + '/*');
   const scripts = [
     {id: 'xr-main', matches, js: ['engine.js', 'hook.js'], runAt: 'document_start', world: 'MAIN', allFrames: false},
-    {id: 'xr-bridge', matches, js: ['date-unlock.js', 'opening.js', 'opening-ui.js', 'play33.js', 'bridge.js'], runAt: 'document_start', world: 'ISOLATED', allFrames: true},
+    {id: 'xr-bridge', matches, js: ['settings.js', 'date-unlock.js', 'opening.js', 'opening-ui.js', 'play33.js', 'bridge.js'], runAt: 'document_start', world: 'ISOLATED', allFrames: true},
     {id: 'xr-anti-main', matches, js: ['vendor/acorn.js', 'anti-debug.js'], runAt: 'document_start', world: 'MAIN', allFrames: true}
   ];
   const existing = new Set(current.map(script => script.id));
@@ -103,6 +107,7 @@ function syncSafely() {
 
 async function saveConfig(message) {
   const {config: current = initial} = await chrome.storage.local.get('config');
+  if (typeof current.keyescapeTimetableEnabled !== 'boolean') current.keyescapeTimetableEnabled = !!current.enabled;
   const config = message.type === 'enabled'
     ? {...current, enabled: !!message.enabled}
     : mergeConfig(current, message.before, message.after);
@@ -117,12 +122,14 @@ async function saveSiteSettings(message) {
   if (!['http:', 'https:'].includes(url.protocol) || url.origin !== message.site) {
     throw Error('올바른 사이트 주소가 필요합니다.');
   }
-  if (!['dateUnlock', 'play33', 'antiDebug', 'restoreDefaults', 'register'].includes(message.setting)
+  const helperSetting = ['helper', 'opening', 'timetable', 'startHelper'].includes(message.setting);
+  if (!['dateUnlock', 'play33', 'antiDebug', 'restoreDefaults', 'register', 'helper', 'opening', 'timetable', 'startHelper'].includes(message.setting)
+      || (helperSetting && !XRSettings.helperSites.includes(message.site))
       || (message.setting === 'play33' && message.site !== 'https://play33.kr')
-      || (['dateUnlock', 'restoreDefaults'].includes(message.setting) && message.site !== 'https://keyescape.com')) {
+      || (['dateUnlock', 'restoreDefaults', 'timetable'].includes(message.setting) && message.site !== 'https://keyescape.com')) {
     throw Error('지원하지 않는 사이트 설정입니다.');
   }
-  if (['dateUnlock', 'play33', 'antiDebug'].includes(message.setting) && typeof message.enabled !== 'boolean') {
+  if (['dateUnlock', 'play33', 'antiDebug', 'helper', 'opening', 'timetable'].includes(message.setting) && typeof message.enabled !== 'boolean') {
     throw Error('설정 값을 확인해주세요.');
   }
   if (!await chrome.permissions.contains({origins: [message.site + '/*']})) {
@@ -130,6 +137,23 @@ async function saveSiteSettings(message) {
   }
   const {config: current = initial} = await chrome.storage.local.get('config');
   let config = {...current, sites: [...new Set([...current.sites, message.site])]};
+  if (typeof config.keyescapeTimetableEnabled !== 'boolean') config.keyescapeTimetableEnabled = !!current.enabled;
+  const setSiteFlag = (field, enabled) => {
+    const disabled = new Set(config[field] || []);
+    if (enabled) disabled.delete(message.site); else disabled.add(message.site);
+    config[field] = [...disabled];
+  };
+  if (message.setting === 'helper') setSiteFlag('helperDisabledSites', message.enabled);
+  if (message.setting === 'opening') setSiteFlag('openingDisabledSites', message.enabled);
+  if (message.setting === 'timetable') config.keyescapeTimetableEnabled = message.enabled;
+  if (message.setting === 'startHelper') {
+    setSiteFlag('helperDisabledSites', true);
+    setSiteFlag('openingDisabledSites', true);
+    if (message.site === 'https://keyescape.com') {
+      config.keyescapeDateUnlockEnabled = true;
+      config.keyescapeTimetableEnabled = true;
+    } else config.play33Enabled = true;
+  }
   if (message.setting === 'dateUnlock') config.keyescapeDateUnlockEnabled = message.enabled;
   if (message.setting === 'play33') config.play33Enabled = message.enabled;
   if (message.setting === 'antiDebug') {

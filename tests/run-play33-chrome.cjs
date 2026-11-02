@@ -50,6 +50,22 @@ const fixture=`<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  async function change(key,value){return ev(`(()=>{const el=${panel}.getElementById(${JSON.stringify(key)});el.value=${JSON.stringify(value)};el.dispatchEvent(new Event('change',{bubbles:true}));})()`);}
  await until(()=>ev("!!document.querySelector('#xr-play33-panel')"),'panel installed');
  await until(()=>ev(`${panel}.querySelector('xr-opening-card')?.shadowRoot?.querySelector('#headline')`),'opening card installed');
+ async function helper(setting,enabled){return evaluate(options.sessionId,`(async()=>{const r=await chrome.runtime.sendMessage({type:'siteSetting',site:'https://play33.kr',setting:'${setting}',enabled:${enabled}});if(!r.ok)throw Error(r.error);})()`);}
+ await helper('opening',false);
+ await until(()=>ev(`!${panel}.querySelector('xr-opening-card')`),'opening off leaves panel mounted');
+ assert.equal(await ev("!!document.querySelector('#xr-play33-panel')"),true);
+ await helper('opening',true);
+ await until(()=>ev(`${panel}.querySelector('xr-opening-card')`),'opening restored inside panel');
+ await helper('play33',false);
+ await until(()=>ev("!document.querySelector('#xr-play33-panel')&&!!document.querySelector('xr-opening-card')"),'opening alone on reservation input');
+ await helper('helper',false);
+ await until(()=>ev("!document.querySelector('xr-opening-card')"),'master hides opening alone');
+ await helper('helper',true);
+ await until(()=>ev("!!document.querySelector('xr-opening-card')"),'master restores opening without panel');
+ assert.equal(await ev("!!document.querySelector('#xr-play33-panel')"),false,'panel choice remains off');
+ await helper('play33',true);
+ await until(()=>ev(`${panel}.querySelector('xr-opening-card')`),'panel and opening restored');
+
  await change('date','2027-01-15');
  assert.match(await ev(`${panel}.querySelector('xr-opening-card').shadowRoot.textContent`),/2027-01-08 20:00/);
  await change('branch','7');
@@ -70,6 +86,7 @@ const fixture=`<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  await change('date','2026-11-06');assert.equal((await values()).time,'09:50');
  await change('time','13:25');await change('date','2026-11-08');assert.equal((await values()).time,'13:25','valid time preserved');
  const beforeInvalid=await values();await change('date','');assert.deepEqual(await values(),beforeInvalid,'empty date does not partially write');
+ assert.equal(await ev(`${panel}.querySelector('xr-opening-card').shadowRoot.getElementById('headline').textContent`),'방문 날짜를 선택하세요','empty input must not show the previous reservation date');
  await ev(`${panel}.getElementById('restore').click()`);assert.deepEqual(await values(),original);
  assert.equal(await ev("document.querySelector('#unrelated input').value"),'99');
  assert.equal(await ev('submitted'),0);
@@ -98,6 +115,11 @@ const fixture=`<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  assert.equal(await evaluate(other.sessionId,"!!document.querySelector('#xr-play33-panel')"),false);
  await evaluate(other.sessionId,`document.body.innerHTML='<form><select name="branch"><option value="7">수원점</option></select><input name="date" value="2027-01-15"></form><input id="reservation_range_day" value="8"><input id="reservation_range_open_time" value="18:30:00">'`);
  await until(()=>evaluate(other.sessionId,"document.querySelector('xr-opening-card')?.shadowRoot.textContent.includes('2027-01-07 18:30')"),'listing reads current official settings');
+ await helper('opening',false);
+ await until(()=>evaluate(other.sessionId,"document.querySelectorAll('xr-opening-card').length===0"),'opening removed from listing');
+ assert.equal(await ev("!!document.querySelector('#xr-play33-panel')"),true);
+ await helper('opening',true);
+ await until(()=>evaluate(other.sessionId,"!!document.querySelector('xr-opening-card')"),'opening restored on listing');
  await save([]);await until(()=>ev("!document.querySelector('#xr-play33-panel')"),'remove site');assert.deepEqual(await values(),original);
  assert.equal(await evaluate(other.sessionId,"document.querySelectorAll('xr-opening-card').length"),0);
  await call('Target.activateTarget',{targetId:page.targetId});
@@ -105,7 +127,7 @@ const fixture=`<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  await until(()=>evaluate(popup.sessionId,"document.querySelector('#addCurrentSite')?.disabled === false"),'quick registration available');
  await evaluate(popup.sessionId,"document.querySelector('#addCurrentSite').click()",true);
  await until(()=>ev("!!document.querySelector('#xr-play33-panel')"),'quick registration reenables panel');
- await until(()=>evaluate(popup.sessionId,"document.querySelector('#play33State').textContent.includes('적용 중')"),'popup Play33 state');
+ await until(()=>evaluate(popup.sessionId,"document.querySelector('#play33State').textContent.includes('사용 중')"),'popup Play33 state');
  assert.equal(await evaluate(popup.sessionId,"document.querySelector('#addCurrentSite').disabled"),true);
  assert.equal(await evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config.enabled)"),false);
  const popupShot=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:true},popup.sessionId);

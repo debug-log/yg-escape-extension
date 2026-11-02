@@ -4,60 +4,46 @@
   <meta charset="utf-8">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="popup.css">
-  <title>YG Escpae Extension</title>
+  <title>예약 도우미 · YG Escpae</title>
 </head>
 <body class="popup">
   <header class="popup-header">
-    <span class="brand"><img src="icons/icon-128.png" width="32" height="32" alt=""><span>YG Escpae</span></span>
-    <button id="manage" class="text-button">규칙 관리</button>
+    <span class="brand"><img src="icons/icon-128.png" width="28" height="28" alt=""><span>YG Escpae</span></span>
+    <button id="manage" class="text-button">설정</button>
   </header>
-  <div class="site-heading">
-    <span class="site-caption">현재 사이트</span>
-    <h1 id="site"></h1>
-    <button id="addCurrentSite" class="site-add" disabled>현재 사이트 추가</button>
-  </div>
-  <div class="setting-list">
-    <div class="setting-row" id="play33Feature" hidden>
-      <div class="setting-copy">
-        <label for="play33Toggle">플레이33 예약 선택</label>
-        <p id="play33State" role="status"></p>
+  <main class="popup-main">
+    <div class="site-heading">
+      <span class="site-caption">현재 사이트</span>
+      <div class="site-title"><h1 id="site">확인 중…</h1><input class="toggle" type="checkbox" role="switch" id="helperToggle" aria-label="현재 사이트 예약 도우미" aria-describedby="helperState" disabled></div>
+      <p id="siteAddress" class="site-address"></p>
+      <p id="helperState" class="helper-state" role="status"></p>
+      <button id="addCurrentSite" class="site-add" hidden>사용 시작</button>
+    </div>
+    <div class="setting-list" id="helperFeatures" hidden>
+      <div class="setting-row" id="openingFeature">
+        <div class="setting-copy"><label for="openingToggle">오픈 일정 안내</label><p id="openingState"></p></div>
+        <input class="toggle" type="checkbox" role="switch" id="openingToggle" aria-describedby="openingState">
       </div>
-      <input class="toggle" type="checkbox" role="switch" id="play33Toggle" aria-describedby="play33State">
-    </div>
-    <div class="setting-row">
-      <div class="setting-copy">
-        <label for="enabled">응답 변경</label>
-        <p id="state" role="status">확인 중</p>
+      <div class="setting-row" id="dateUnlockFeature" hidden>
+        <div class="setting-copy"><label for="dateUnlockToggle">날짜 선택 제한 해제</label><p id="dateUnlockState"></p></div>
+        <input class="toggle" type="checkbox" role="switch" id="dateUnlockToggle" aria-describedby="dateUnlockState">
       </div>
-      <input class="toggle" type="checkbox" role="switch" id="enabled" aria-describedby="state">
-    </div>
-    <div class="setting-row" id="dateUnlockFeature" hidden>
-      <div class="setting-copy">
-        <label for="dateUnlockToggle">날짜 제한 해제</label>
-        <p id="dateUnlockState" role="status"></p>
+      <div class="setting-row" id="timetableFeature" hidden>
+        <div class="setting-copy"><label for="timetableToggle">기본 시간표</label><p id="state"></p></div>
+        <input class="toggle" type="checkbox" role="switch" id="timetableToggle" aria-describedby="state">
       </div>
-      <input class="toggle" type="checkbox" role="switch" id="dateUnlockToggle" aria-describedby="dateUnlockState">
-    </div>
-    <div class="setting-row">
-      <div class="setting-copy">
-        <label for="antiDebugToggle">개발자도구 보호</label>
-        <p id="antiDebugState" role="status"></p>
+      <div class="setting-row" id="play33Feature" hidden>
+        <div class="setting-copy"><label for="play33Toggle">예약 선택 패널</label><p id="play33State"></p></div>
+        <input class="toggle" type="checkbox" role="switch" id="play33Toggle" aria-describedby="play33State">
       </div>
-      <input class="toggle" type="checkbox" role="switch" id="antiDebugToggle" aria-describedby="antiDebugState">
     </div>
-  </div>
-  <div class="activity">
-    <p id="rule"></p>
-    <p id="last"></p>
-  </div>
-  <p id="popupMessage" role="status"></p>
-  <button id="reload" class="reload-button" hidden>새로고침하여 적용</button>
-  <footer class="popup-footer">
-    <div class="popup-update">
-      <p id="updateStatus" role="status"></p>
-      <button id="openUpdater" class="text-button">업데이트</button>
-    </div>
-  </footer>
+    <button id="reload" class="reload-button" hidden>예약 페이지 새로고침</button>
+    <div class="activity" id="activity" hidden><p id="rule"></p><p id="last"></p></div>
+    <p id="helperNote" class="popup-note"></p>
+    <p id="popupMessage" role="status" aria-live="polite"></p>
+  </main>
+  <footer class="popup-footer"><div class="popup-update"><p id="updateStatus" role="status"></p><button id="openUpdater" class="text-button">업데이트 확인</button></div></footer>
+  <script src="settings.js"></script>
   <script src="popup.js"></script>
   <script src="update-core.js"></script>
   <script src="update-store.js"></script>

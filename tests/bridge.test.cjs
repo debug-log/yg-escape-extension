@@ -1,7 +1,7 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const vm=require('node:vm');const fs=require('node:fs');
 async function publish(config,origin='https://example.com',top=true){
  const messages=[];let dateConfig,play33Config;const event={addListener(){}};
- const ctx=vm.createContext({location:{origin},XRDateUnlock:{configure:c=>{dateConfig=c;}},XRPlay33:{configure:c=>{play33Config=c;}},chrome:{storage:{local:{get:async()=>({config})},onChanged:event},runtime:{onMessage:event}},addEventListener(){},postMessage:m=>messages.push(m)});
+ const ctx=vm.createContext({XRSettings:require('../settings.js'),location:{origin},XRDateUnlock:{configure:c=>{dateConfig=c;}},XRPlay33:{configure:c=>{play33Config=c;}},chrome:{storage:{local:{get:async()=>({config})},onChanged:event},runtime:{onMessage:event}},addEventListener(){},postMessage:m=>messages.push(m)});
  vm.runInContext('window=globalThis; window.top='+(top?'window':'{}'),ctx);
  vm.runInContext(fs.readFileSync('bridge.js','utf8'),ctx);await new Promise(r=>setImmediate(r));
  return {...messages.find(m=>m.type==='config'),dateConfig,play33Config};

@@ -37,7 +37,7 @@ test('revoked host permission clears site exception and all registrations',async
 test('date script is available before bridge configuration in isolated world',async()=>{
  const f=fixture();await f.send({type:'sync'});
  const bridge=f.get().registered.find(s=>s.id==='xr-bridge');
- assert.deepEqual(Array.from(bridge.js),['date-unlock.js','opening.js','opening-ui.js','play33.js','bridge.js']);
+ assert.deepEqual(Array.from(bridge.js),['settings.js','date-unlock.js','opening.js','opening-ui.js','play33.js','bridge.js']);
 });
 
 test('missing defaults are seeded once without losing existing rules or global switch',async()=>{
@@ -112,4 +112,32 @@ test('popup setting changes register permitted sites and preserve unrelated valu
  const before=structuredClone(f.get().config);f.revoke();
  result=await f.send({type:'siteSetting',site:'https://keyescape.com',setting:'dateUnlock',enabled:true});
  assert.equal(result.ok,false);assert.deepEqual(structuredClone(f.get().config),before);
+});
+
+test('migration captures legacy timetable setting once, without activating responses',async()=>{
+ const f=fixture();f.setConfig({enabled:false,sites:['https://keyescape.com'],rules:[]});
+ await f.send({type:'sync'});assert.equal(f.get().config.keyescapeTimetableEnabled,false);
+ await f.send({type:'enabled',enabled:true});assert.equal(f.get().config.keyescapeTimetableEnabled,false);
+});
+test('start helper enables only selected site defaults and master preserves choices',async()=>{
+ const f=fixture();await f.send({type:'sync'});const before=structuredClone(f.get().config);
+ const r=await f.send({type:'siteSetting',site:'https://keyescape.com',setting:'startHelper'});
+ assert.equal(r.ok,true);assert.equal(r.config.enabled,before.enabled);assert.equal(r.config.keyescapeTimetableEnabled,true);
+ assert.deepEqual(structuredClone(r.config.rules),before.rules);
+ await f.send({type:'siteSetting',site:'https://keyescape.com',setting:'opening',enabled:false});
+ await f.send({type:'siteSetting',site:'https://keyescape.com',setting:'dateUnlock',enabled:false});
+ for(const enabled of [false,true]){
+  const result=await f.send({type:'siteSetting',site:'https://keyescape.com',setting:'helper',enabled});assert.equal(result.ok,true);
+  assert.equal(result.config.helperDisabledSites.includes('https://keyescape.com'),!enabled);
+  assert.equal(result.config.keyescapeDateUnlockEnabled,false);assert.ok(result.config.openingDisabledSites.includes('https://keyescape.com'));
+  assert.ok(!result.config.helperDisabledSites.includes('https://play33.kr'));
+ }
+});
+test('new helper commands reject wrong sites and denied permission without mutation',async()=>{
+ const f=fixture();await f.send({type:'sync'});const before=structuredClone(f.get().config);
+ for(const [site,setting,enabled] of [['https://example.com','helper',true],['https://play33.kr','timetable',true],['https://keyescape.com','opening','yes']]){
+  assert.equal((await f.send({type:'siteSetting',site,setting,enabled})).ok,false);
+ }
+ f.revoke();assert.equal((await f.send({type:'siteSetting',site:'https://keyescape.com',setting:'startHelper'})).ok,false);
+ assert.deepEqual(structuredClone(f.get().config),before);
 });

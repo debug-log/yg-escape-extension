@@ -66,7 +66,8 @@
   globalThis.XRDateUnlock={
     configure(config){
       ready=true;
-      const enabled=eligible()&&config.sites.includes(location.origin)&&config.keyescapeDateUnlockEnabled!==false;
+      const helper=XRSettings.helperState(config,location.origin);
+      const enabled=eligible()&&helper.registered&&helper.enabled&&helper.dateUnlock;
       if(!enabled){stop();return;}
       if(!active){active=true;scan();}
     },

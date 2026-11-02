@@ -25,6 +25,7 @@ jobs:
           python-version: '3.12'
       - run: npm test
       - run: python scripts/package.py
+      - run: node tests/run-helper-ux-chrome.cjs
       - run: node tests/run-date-unlock-chrome.cjs
       - run: node tests/run-play33-chrome.cjs
       - run: node tests/run-update-chrome.cjs

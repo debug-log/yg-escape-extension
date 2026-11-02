@@ -58,7 +58,7 @@ class UpdatePage {
     ui.setup.hidden = !offer || Boolean(this.directory) || applying;
     ui.choose.disabled = !this.ready || this.busy || Boolean(this.journal);
     ui.chooseInitial.disabled = ui.choose.disabled;
-    ui.choose.textContent = this.directory ? '폴더 변경' : '설치 폴더 선택';
+    ui.choose.textContent = this.directory ? '연결 폴더 변경' : '설치 폴더 연결';
     ui.folder.textContent = this.directory ? `${this.directory.name} · 연결됨` : '연결되지 않음';
     ui.install.hidden = !(offer && this.directory) && !applying;
     ui.install.disabled = !this.ready || this.busy || !offer || !this.directory;

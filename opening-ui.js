@@ -5,23 +5,23 @@
   const O=root.XROpening,widgets=new Set(),cells=new Map();
   let active=false,timer=null,keyCard=null,listCard=null,style=null,selected='',identity='';
   const css=`
-    :host{display:block;clear:both;width:100%;min-width:0;margin:14px 0;color:#25352f;text-align:left;font:14px/1.55 "Pretendard","Malgun Gothic",sans-serif;color-scheme:light}
-    *{box-sizing:border-box}.card{padding:18px 20px;border:1px solid #cddfd7;border-radius:10px;background:#f3f8f5}
-    .card[data-phase=upcoming]{background:#fff8ed;border-color:#ead5b4}.card[data-phase=unknown],.card[data-phase=past]{background:#f5f5f5;border-color:#ddd}
-    .eyebrow{font-size:11px;font-weight:700;letter-spacing:.06em;color:#64766d}h3{margin:5px 0;font-size:18px;line-height:1.4;font-weight:750;color:inherit}
-    p{margin:4px 0}.count{font-size:22px;font-weight:750;font-variant-numeric:tabular-nums;letter-spacing:-.5px}.muted{color:#5b685f;font-size:12px}
-    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button,a{font:inherit;font-size:12px;color:#324e40}button{padding:7px 10px;background:#fff;border:1px solid #bacac1;border-radius:5px;cursor:pointer}
-    button:disabled{opacity:.5;cursor:default}a{align-self:center}button:focus-visible,a:focus-visible{outline:3px solid #a85513;outline-offset:2px}
-    details{margin-top:9px;font-size:11px;color:#68746d}summary{cursor:pointer}.legend{margin-top:10px;font-size:11px;color:#59665f}
+    :host{display:block;clear:both;width:100%;min-width:0;margin:14px 0;color:#202124;text-align:left;font:14px/1.55 "Pretendard","Malgun Gothic",sans-serif;color-scheme:light}
+    *{box-sizing:border-box}.card{padding:18px 20px;border:1px solid #e5e7eb;border-left:3px solid #246343;border-radius:10px;background:#fff}
+    .card[data-phase=upcoming]{background:#fff9ef;border-left-color:#a66b16}.card[data-phase=unknown],.card[data-phase=past]{background:#f8f9fa;border-left-color:#a4a9b2}
+    .eyebrow{font-size:11px;font-weight:700;letter-spacing:0;color:#626771}h3{margin:5px 0;font-size:18px;line-height:1.4;font-weight:750;color:inherit}
+    p{margin:4px 0}.count{font-size:22px;font-weight:750;font-variant-numeric:tabular-nums;letter-spacing:-.5px}.muted{color:#626771;font-size:12px}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button,a{font:inherit;font-size:12px;color:#d92130}button{padding:7px 10px;background:#fff;border:1px solid #cfd2d8;border-radius:8px;cursor:pointer}
+    button:disabled{opacity:.5;cursor:default}a{align-self:center}button:focus-visible,a:focus-visible{outline:3px solid #d92130;outline-offset:2px}
+    details{margin-top:9px;font-size:11px;color:#626771}summary{cursor:pointer}.legend{margin-top:10px;font-size:11px;color:#59665f}
     @media(max-width:480px){.card{padding:14px}h3{font-size:16px}.count{font-size:20px}}
   `;
   function text(el,value){if(el.textContent!==value)el.textContent=value;}
   function create(getSelection,onDate){
     const host=document.createElement('xr-opening-card'),shadow=host.attachShadow({mode:'open'});
-    shadow.innerHTML=`<style>${css}</style><section class="card" aria-label="예약 오픈 안내">
-      <div class="eyebrow">예약 오픈 안내 · 한국시간</div><h3 id="headline"></h3>
+    shadow.innerHTML=`<style>${css}</style><section class="card" aria-label="오픈 일정 안내">
+      <div class="eyebrow">오픈 일정 안내 · 한국시간</div><h3 id="headline"></h3>
       <p id="when"></p><p class="count" id="count"></p><p class="muted" id="range"></p><p class="muted" id="next"></p>
-      <div class="actions"><button type="button" id="latest">최근 오픈 날짜 보기</button><button type="button" id="upcoming">다음 오픈 날짜 보기</button><a id="source" target="_blank" rel="noopener noreferrer">공식 예약 안내 ↗</a></div>
+      <div class="actions"><button type="button" id="latest">최근 오픈 날짜 보기</button><button type="button" id="upcoming">다음 오픈 날짜 보기</button><a id="source" target="_blank" rel="noopener noreferrer">공식 예약 안내</a></div>
       <p class="muted">오픈 시각 기준 안내입니다. 잔여석·매진 여부는 예약 화면에서 확인하세요.</p>
       <details><summary>안내 기준</summary>2026.11.03 확인한 공식 예약 규칙 · 현재 기기 시각으로 계산하며 일정은 변경될 수 있습니다.</details>
     </section>`;
@@ -33,9 +33,9 @@
       const reached=previous?.signature===signature&&(previous.phase==='upcoming'||previous.reached)&&state.phase==='open';
       previous={signature,phase:state.phase,reached};
       shadow.querySelector('section').dataset.phase=state.phase;
-      text(ui.headline,!s.date?'방문 날짜를 선택하세요':state.phase==='unknown'?'오픈 일정 확인 필요':state.phase==='past'?'지난 방문 날짜입니다':state.phase==='open'?'오픈 시각이 지났어요':`${s.date.slice(5).replace('-','/')} 방문분 · ${O.kstDate(state.opensAt)===O.kstDate(now)?'오늘':'예약'} ${r.time} 오픈`);
+      text(ui.headline,!s.date?'방문 날짜를 선택하세요':state.phase==='unknown'?'오픈 일정 확인 필요':state.phase==='past'?'지난 방문 날짜입니다':state.phase==='open'?'오픈 시각이 지났습니다':`${s.date.slice(5).replace('-','/')} 방문분 · ${O.kstDate(state.opensAt)===O.kstDate(now)?'오늘':'예약'} ${r.time} 오픈`);
       text(ui.when,state.opensAt===null?'':`${s.date} 방문분 → ${O.stamp(state.opensAt)} 오픈`);
-      text(ui.count,state.phase==='upcoming'?O.remaining(state.opensAt-now):reached?'오픈 예정 시각이 됐어요 · 예약 현황을 확인하세요':'');
+      text(ui.count,state.phase==='upcoming'?O.remaining(state.opensAt-now):reached?'오픈 시각이 되었습니다 · 예약 현황을 확인하세요':'');
       ui.count.hidden=!ui.count.textContent;
       text(ui.range,dates?`오픈 시각이 지난 범위: ${dates.latest<dates.today?'없음':`${dates.today} ~ ${dates.latest}`}`:'이 지점의 오픈 규칙은 공식 안내를 확인해주세요.');
       text(ui.next,dates?`다음: ${dates.next} 방문분 · ${O.stamp(O.state(r,dates.next,now).opensAt)} 오픈`:'');
@@ -116,10 +116,34 @@
     if(!form){listCard?.dispose();listCard=null;return;}
     if(!listCard?.host.isConnected){listCard?.dispose();listCard=create(listSelection,null);form.after(listCard.host);}
   }
+  function createScan(){
+    const panel=document.querySelector('#xr-play33-panel')?.shadowRoot;
+    const form=[...document.forms].find(f=>['branch','theme','date'].every(k=>f.querySelector(`input[type="hidden"][name="${k}"]`)));
+    const anchor=panel?.querySelector('.fields')||form;
+    if(!anchor){listCard?.dispose();listCard=null;return;}
+    const getSelection=()=>{
+      const panel=document.querySelector('#xr-play33-panel')?.shadowRoot;
+      const branch=panel?.getElementById('branch')?.value??form.querySelector('input[name="branch"]').value;
+      const date=panel?.getElementById('date')?.value??form.querySelector('input[name="date"]').value;
+      return {site:'play33',branch,date,rule:O.rule('play33',branch)};
+    };
+    if(!listCard){listCard=create(getSelection,null);}
+    // Recreate when the form or panel changes so selection readers cannot retain an old form.
+    if(listCard.host.previousElementSibling!==anchor){
+      listCard.dispose();listCard=create(getSelection,panel?date=>{
+        const input=panel.getElementById('date');input.value=date;
+        input.dispatchEvent(new Event('change',{bubbles:true}));
+      }:null);
+      anchor.after(listCard.host);
+    }
+  }
   function tick(){
     if(!active)return;
     if(location.origin==='https://keyescape.com'&&location.pathname==='/reservation1.php')keyScan();
-    if(location.origin==='https://play33.kr'&&location.pathname==='/reservation')listScan();
+    if(location.origin==='https://play33.kr'){
+      if(location.pathname==='/reservation')listScan();
+      if(location.pathname==='/reservation/create')createScan();
+    }
     for(const widget of widgets)if(widget.host.isConnected)widget.render();
   }
   function onDate(event){
@@ -130,8 +154,9 @@
     keySelection();selected=cell.dataset.date;
     keyCard?.render();
   }
-  root.XROpeningUI={create,configure(config){
-    const enabled=window===window.top&&['https://keyescape.com','https://play33.kr'].includes(location.origin)&&config.sites.includes(location.origin);
+  root.XROpeningUI={create,refresh:tick,getState(){return {ready:true,eligible:window===window.top&&((location.origin==='https://keyescape.com'&&location.pathname==='/reservation1.php')||(location.origin==='https://play33.kr'&&['/reservation','/reservation/create'].includes(location.pathname))),active:active&&[...widgets].some(w=>w.host.isConnected)};},configure(config){
+    const helper=XRSettings.helperState(config,location.origin);
+    const enabled=window===window.top&&helper.supported&&helper.registered&&helper.enabled&&helper.opening;
     if(enabled===active)return;
     active=enabled;
     if(active){document.addEventListener('click',onDate,true);document.addEventListener('keydown',onDate,true);document.addEventListener('change',tick);tick();timer=setInterval(tick,1000);}
