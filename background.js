@@ -19,7 +19,7 @@ const initial = {
   }]
 };
 let queue = Promise.resolve();
-const KEYESCAPE_DEFAULTS_VERSION = 3;
+const KEYESCAPE_DEFAULTS_VERSION = 4;
 
 async function addDefaultRules(config) {
   const response = await fetch(chrome.runtime.getURL('keyescape-weekday-fallback-rules.json'));

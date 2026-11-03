@@ -44,7 +44,7 @@ test('missing defaults are seeded once without losing existing rules or global s
  const f=fixture();await f.send({type:'sync'});
  const seeded=f.get().config;
  assert.equal(seeded.rules.filter(r=>r.action==='weekdayFallback').length,34);
- assert.equal(seeded.keyescapeDefaultsVersion,3);
+ assert.equal(seeded.keyescapeDefaultsVersion,4);
  const edited={...seeded.rules[0],name:'my edit',enabled:false};
  const after={...seeded,enabled:false,rules:[edited,{id:'custom',name:'keep me'}]};
  await f.send({type:'save',before:structuredClone(seeded),after});
@@ -65,7 +65,7 @@ test('older defaults gain missing bundled samples and weekday groups without ove
 
  const config=f.get().config;
  const migrated=config.rules.find(r=>r.id===old.id);
- assert.equal(config.keyescapeDefaultsVersion,3);
+ assert.equal(config.keyescapeDefaultsVersion,4);
  assert.equal(migrated.name,'my AYAKO');assert.equal(migrated.enabled,false);
  assert.equal(migrated.samples[0].response.data[0].enable,'N');
  assert.ok(migrated.samples.some(s=>s.date==='2026-11-08'));
@@ -84,11 +84,11 @@ test('version 2 eoduksini rule gains its bundled weekday group',async()=>{
  assert.equal(migrated.name,'my eoduksini');
  assert.deepEqual(structuredClone(migrated.weekdayGroups),[[1,2,3,4]]);
 });
-test('all bundled defaults validate and contain only the 233 verified schedules',()=>{
+test('bundled defaults validate and distinguish official samples from provided weekday templates',()=>{
  const {rules}=JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8'));
  const engine=require('../engine.js');
  assert.equal(rules.length,34);assert.equal(new Set(rules.map(r=>r.id)).size,34);
- assert.equal(rules.reduce((n,r)=>n+r.samples.length,0),233);
+ assert.equal(rules.reduce((n,r)=>n+r.samples.length,0),236);
  for(const r of rules)engine.validate(r);
 });
 
@@ -152,4 +152,21 @@ test('new helper commands reject wrong sites and denied permission without mutat
  }
  f.revoke();assert.equal((await f.send({type:'siteSetting',site:'https://keyescape.com',setting:'startHelper'})).ok,false);
  assert.deepEqual(structuredClone(f.get().config),before);
+});
+
+test('version 3 installation gains user-provided eoduksini weekends without losing edits',async()=>{
+ const bundled=JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8')).rules.find(r=>r.id==='keyescape-weekday-fallback-31-96');
+ const old={...structuredClone(bundled),name:'my eoduksini',enabled:false,samples:structuredClone(bundled.samples.filter(s=>['2026-11-02','2026-11-03'].includes(s.date)))};
+ old.samples[0].response.data[0].enable='N';
+ const f=fixture();f.setConfig({enabled:false,keyescapeTimetableEnabled:false,sites:[],rules:[old,{id:'mine',name:'personal'}],keyescapeDefaultsVersion:3});
+ await f.send({type:'sync'});
+ const config=f.get().config,r=config.rules.find(r=>r.id===old.id);
+ assert.equal(r.name,'my eoduksini');assert.equal(r.enabled,false);
+ assert.equal(config.enabled,false);assert.equal(config.keyescapeTimetableEnabled,false);
+ assert.equal(r.samples.find(s=>s.date==='2026-11-02').response.data[0].enable,'N');
+ assert.ok(config.rules.some(r=>r.id==='mine'));
+ assert.deepEqual([...new Set(r.samples.map(s=>s.response.data[0].gubun))].sort(),['A','B','C','D']);
+ const provided=r.samples.filter(s=>s.source?.type==='user-provided');
+ assert.equal(provided.length,3);
+ assert.ok(provided.every(s=>s.source.dateBasis==='weekday-reference'&&s.source.verification==='not-live-verified'));
 });

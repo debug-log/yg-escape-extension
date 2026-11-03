@@ -45,6 +45,12 @@ const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" conten
    document.querySelector('tr').insertAdjacentHTML('beforeend','<td id="saturday" class="selDate sat disabled" data-date="2026-11-07">7</td><td id="sunday" class="selDate sun disabled" data-date="2026-11-08">8</td>');
    document.querySelector('#theme').dispatchEvent(new Event('change',{bubbles:true}));`);
  await dropdownEv('new Promise(r=>setTimeout(r,100))');
+ // The supplied Friday/Saturday/Sunday schedules make every weekday selectable.
+ await until(()=>dropdownEv("['date','blocked','saturday','sunday'].every(id=>document.getElementById(id).classList.contains('available'))"),'all eoduksini weekday groups available');
+ // Retain regression coverage for users who keep only the original weekday samples.
+ await save({rules:installed.rules.map(r=>r.id==='keyescape-weekday-fallback-31-96'
+   ?{...r,samples:r.samples.filter(s=>!s.source)}:r)});
+ await until(()=>dropdownEv("document.querySelector('#blocked').classList.contains('disabled')"),'custom partial sample selection respected');
  async function assertDropdownWeekdays(){
    assert.equal(await dropdownEv("document.querySelector('#date').classList.contains('available')"),true,'Thursday remains selectable');
    for(const id of ['blocked','saturday','sunday']){

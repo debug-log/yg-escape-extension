@@ -39,3 +39,19 @@ test('request body parser snapshots URLSearchParams and ignores unsupported bodi
  assert.equal(E.parseRequestBody(null),null);assert.equal(E.parseRequestBody(new Blob(['ignored'])),null);
  const form=new FormData();form.set('themeNum','66');assert.equal(E.parseRequestBody(form).themeNum,'66');
 });
+
+test('bundled eoduksini uses distinct Friday, Saturday and Sunday slot IDs',()=>{
+ const r=require('../keyescape-weekday-fallback-rules.json').rules.find(r=>r.id==='keyescape-weekday-fallback-31-96');
+ const expectedTimes='09:25 10:20 11:15 12:05 13:00 13:55 14:45 15:40 16:35 17:25 18:20 19:15 20:05 21:00 21:55'.split(' ');
+ for(const [date,gubun,first,last] of [['2026-11-06','B',3531,3545],['2026-11-07','C',3546,3560],['2026-11-08','D',3561,3575],['2026-11-09','A',3516,3530]]){
+  const request=new URLSearchParams({...r.requestParams,date});
+  const out=E.transform(failure,[r],endpoint,'POST','https://keyescape.com/reservation1.php',request);
+  assert.equal(out.matched,true,date);
+  assert.equal(out.value.data.length,15);
+  assert.deepEqual(out.value.data.map(row=>`${row.hh}:${row.mm}`),expectedTimes);
+  assert.deepEqual(out.value.data.map(row=>row.num),Array.from({length:15},(_,i)=>first+i));
+  assert.equal(out.value.data.at(-1).num,last);
+  assert.ok(out.value.data.every(row=>row.gubun===gubun&&row.theme_num===96&&row.enable==='Y'));
+  assert.equal(E.transform({status:true,data:[{enable:'N'}]},[r],endpoint,'POST','',request).matched,false,'live successful response stays unchanged');
+ }
+});
