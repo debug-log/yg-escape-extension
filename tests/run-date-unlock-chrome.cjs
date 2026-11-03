@@ -24,7 +24,7 @@ function startChrome(){
 async function stopChrome(){const exited=new Promise(resolve=>child.once('exit',resolve));await call('Browser.close').catch(()=>child.kill());await exited;}
 const deadline=setTimeout(()=>{console.error('Chrome integration deadline exceeded');child?.kill();process.exit(1);},90000);
 
-const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Date fixture</title><style>body{font:16px sans-serif;margin:20px}.reservationPick{max-width:500px}table{width:100%;text-align:center}td{padding:12px}#datepicker{padding:20px;border:1px solid #ddd;border-radius:10px}</style><select id="zizum"><option value="31">백산방역</option><option value="26">에버랜드</option></select><select id="theme"><option value="84" data-doing="3">A</option><option value="34" data-doing="7">B</option></select><div class="reservationPick"><div id="datepicker"><table><tr><td id="date" class="selDate disabled endDay" data-date="2026-11-05">5</td><td id="blocked" class="selDate disabled" data-date="2026-11-06">6</td><td id="past" title="original hint" style="outline: 1px solid blue; outline-offset: 1px" class="selDate disabled" data-date="2020-01-01">1</td><td id="native" class="selDate available" data-date="2026-11-09">9</td><td id="empty" class="selDate disabled">empty</td></tr></table></div></div><button class="disabled" id="button">Other</button>';
+const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Date fixture</title><style>body{font:16px sans-serif;margin:20px}.reservationPick{max-width:500px}table{width:100%;text-align:center}td{padding:12px}#datepicker{padding:20px;border:1px solid #ddd;border-radius:10px}</style><select id="zizum"><option value="31">백산방역</option><option value="26">에버랜드</option></select><select id="theme"><option value="84" data-doing="3">A</option><option value="34" data-doing="7">B</option></select><div class="reservationPick"><div id="datepicker"><table><tr><td id="date" title="원래 날짜 안내" class="selDate disabled endDay" data-date="2026-11-05">5</td><td id="blocked" class="selDate disabled" data-date="2026-11-06">6</td><td id="past" title="original hint" style="outline: 1px solid blue; outline-offset: 1px" class="selDate disabled" data-date="2020-01-01">1</td><td id="native" class="selDate available" data-date="2026-11-09">9</td><td id="empty" class="selDate disabled">empty</td></tr></table></div></div><button class="disabled" id="button">Other</button>';
 (async()=>{try{
  startChrome();
  const extension=await call('Extensions.loadUnpacked',{path:extensionDir});
@@ -79,6 +79,20 @@ const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  await ev("document.querySelector('#blocked').classList.remove('available');document.querySelector('#blocked').classList.add('disabled')");
  await until(()=>ev("document.querySelector('#blocked').classList.contains('xr-date-unlock-unconfirmed')"),'native reset restores unavailable shading');
  await until(()=>ev("!!document.querySelector('#date').dataset.xrOpening"),'future opening hint rendered');
+
+ await until(()=>ev("!!document.querySelector('#date').dataset.xrCalendarHint"),'unified calendar tooltip');
+ assert.equal(await ev("document.querySelector('#date').hasAttribute('title')"),false,'native tooltip suppressed');
+ assert.equal(await ev("document.querySelector('#date').dataset.xrCalendarHint"),'2026-11-03 09:30 오픈 (한국시간)\n확장 프로그램으로 선택 제한을 해제한 날짜\n원래 날짜 안내');
+ assert.equal(await ev("document.querySelector('#date').getAttribute('aria-label').includes('잔여석 미확인')"),false);
+ const upcoming=require('../opening.js').range(require('../opening.js').rule('keyescape','31',3)).next;
+ await ev(`(async()=>{const cell=document.createElement('td');cell.className='selDate disabled';cell.dataset.date='${upcoming}';cell.id='nearest';document.querySelector('tr').append(cell);await Promise.resolve();})()`);
+ await until(()=>ev("document.querySelector('#nearest .xr-opening-badge')?.textContent==='09:30 오픈'"),'nearest opening date displays time even after today opening');
+ await save({openingDisabledSites:['https://keyescape.com']});
+ await until(()=>ev("!document.querySelector('#date').hasAttribute('data-xr-opening-label')"),'opening tooltip disabled');
+ assert.equal(await ev("document.querySelector('#date').dataset.xrCalendarHint"),'확장 프로그램으로 선택 제한을 해제한 날짜\n원래 날짜 안내','unlock tooltip works independently');
+ assert.equal(await ev("document.querySelector('#date').hasAttribute('title')"),false);
+ await save({openingDisabledSites:[]});
+ await until(()=>ev("document.querySelector('#date').dataset.xrCalendarHint?.includes('09:30 오픈')"),'opening tooltip restored');
  // A freshly rendered calendar must be annotated in the same turn, without waiting for the timer.
  assert.equal(await ev(`(async()=>{
    const calendar=document.querySelector('#datepicker');
@@ -180,6 +194,8 @@ const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  await save({sites:[]});await until(async()=>(await state()).dateUnlock.active===false,'site removal');
  assert.equal(await ev("document.querySelectorAll('xr-opening-card,.xr-opening-badge,[data-xr-opening]').length"),0);
  assert.equal(await ev("document.querySelector('#date').hasAttribute('tabindex')"),false);
+ assert.equal(await ev("document.querySelector('#date').title"),'원래 날짜 안내','original native tooltip restored after both features stop');
+ assert.equal(await ev("document.querySelector('#date').hasAttribute('data-xr-calendar-hint')"),false);
  await ev("document.querySelector('#date').className='selDate disabled'");await ev('new Promise(r=>setTimeout(r,100))');
  assert.equal(await ev("document.querySelector('#date').classList.contains('disabled')"),true);
  const unregistered=await fixtureTab('https://keyescape.com/reservation1.php?unregistered=1');

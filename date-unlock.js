@@ -31,7 +31,7 @@
   function ensureStyle(){
     if(style?.isConnected)return;
     style=document.createElement('style');style.id='xr-date-unlock-style';
-    style.textContent='#datepicker td.xr-date-unlock-unconfirmed{background:#ececec!important;background-image:none!important;color:#9a9a9a!important;cursor:not-allowed!important}';
+    style.textContent='#datepicker td.xr-date-unlock-unconfirmed{background:#ececec!important;background-image:none!important;color:#9a9a9a!important;cursor:not-allowed!important}'+XROpeningUI.calendarHintCSS;
     document.documentElement.append(style);
   }
   function restore(cell,before,classes=true){
@@ -45,10 +45,7 @@
       if(saved.value)cell.style.setProperty(name,saved.value,saved.priority);
       else cell.style.removeProperty(name);
     }
-    if(cell.getAttribute('title')===before.appliedTitle){
-      if(before.title===null)cell.removeAttribute('title');
-      else cell.setAttribute('title',before.title);
-    }
+    XROpeningUI.clearCalendarHint(cell,'unlock');
   }
   function scan(){
     timer=null;
@@ -73,7 +70,7 @@
           blocked.add(cell);
           continue;
         }
-        const before={date:cell.getAttribute('data-date'),available:cell.classList.contains('available'),title:cell.getAttribute('title'),styles:[]};
+        const before={date:cell.getAttribute('data-date'),available:cell.classList.contains('available'),styles:[]};
         cell.classList.remove('disabled');
         cell.classList.add('available');
         // Keep the calendar's selected background and date text visible.
@@ -83,8 +80,7 @@
           saved.applied=cell.style.getPropertyValue(name);
           before.styles.push([name,saved]);
         }
-        cell.title=cell.title?cell.title+' · '+hint:hint;
-        before.appliedTitle=cell.title;
+        XROpeningUI.setCalendarHint(cell,'unlock',hint);
         changed.set(cell,before);
         count++;
       }

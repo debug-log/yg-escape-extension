@@ -4,6 +4,31 @@
   if(root.XROpeningUI)return;
   const O=root.XROpening,widgets=new Set(),cells=new Map();
   let active=false,timer=null,listHint=null,style=null;
+  const calendarHints=new WeakMap();
+  const calendarHintCSS=`#datepicker td[data-xr-calendar-hint]{position:relative}
+    #datepicker td[data-xr-calendar-hint]:hover::after,#datepicker td[data-xr-calendar-hint]:focus-visible::after{content:attr(data-xr-calendar-hint);position:absolute;z-index:10;bottom:100%;left:50%;transform:translateX(-50%);width:max-content;max-width:260px;padding:6px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;color:#555;font:11px/1.5 "Malgun Gothic",sans-serif;white-space:pre-line;text-align:center;pointer-events:none}
+    #datepicker td[data-xr-calendar-hint]:first-child::after{left:0;transform:none}
+    #datepicker td[data-xr-calendar-hint]:last-child::after{left:auto;right:0;transform:none}`;
+  function renderCalendarHint(cell,entry){
+    // Keep a site's own title, while using one tooltip for both extension features.
+    if(cell.hasAttribute('title')){entry.title=cell.getAttribute('title');cell.removeAttribute('title');}
+    const lines=[entry.opening,entry.unlock,entry.title].filter(Boolean);
+    const label=lines.join('\n');
+    if(cell.dataset.xrCalendarHint!==label)cell.dataset.xrCalendarHint=label;
+  }
+  function setCalendarHint(cell,kind,value){
+    let entry=calendarHints.get(cell);
+    if(!entry){entry={title:cell.getAttribute('title')};calendarHints.set(cell,entry);}
+    entry[kind]=value;renderCalendarHint(cell,entry);
+  }
+  function clearCalendarHint(cell,kind){
+    const entry=calendarHints.get(cell);if(!entry)return;
+    delete entry[kind];
+    if(entry.opening||entry.unlock){renderCalendarHint(cell,entry);return;}
+    cell.removeAttribute('data-xr-calendar-hint');
+    if(!cell.hasAttribute('title')&&entry.title!==null)cell.setAttribute('title',entry.title);
+    calendarHints.delete(cell);
+  }
   function text(el,value){if(el.textContent!==value)el.textContent=value;}
   function create(getSelection){
     const host=document.createElement('xr-opening-hint'),shadow=host.attachShadow({mode:'open'});
@@ -27,6 +52,7 @@
     cell.querySelector(':scope > .xr-opening-badge')?.remove();
     cell.removeAttribute('data-xr-opening');
     cell.removeAttribute('data-xr-opening-label');
+    clearCalendarHint(cell,'opening');
     if(before&&cell.getAttribute('aria-label')===before.appliedLabel){
         if(before.label===null)cell.removeAttribute('aria-label');
         else cell.setAttribute('aria-label',before.label);
@@ -60,9 +86,7 @@
       style.textContent=`#datepicker td[data-xr-opening]{position:relative}
         #datepicker .xr-opening-badge{position:absolute;bottom:3px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:currentColor;pointer-events:none}
         #datepicker .xr-opening-badge.is-today{position:absolute;bottom:3px;left:50%;transform:translateX(-50%);display:block;width:auto;height:auto;margin:0;border-radius:0;background:none;font:8px/1 "Malgun Gothic",sans-serif;letter-spacing:-.4px;white-space:nowrap}
-        #datepicker td[data-xr-opening-label]:hover::after,#datepicker td[data-xr-opening-label]:focus-visible::after{content:attr(data-xr-opening-label);position:absolute;z-index:10;bottom:100%;left:50%;transform:translateX(-50%);width:max-content;max-width:220px;padding:6px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;color:#555;font:11px/1.5 "Malgun Gothic",sans-serif;white-space:pre;pointer-events:none}
-        #datepicker td[data-xr-opening-label]:first-child::after{left:0;transform:none}
-        #datepicker td[data-xr-opening-label]:last-child::after{left:auto;right:0;transform:none}`;
+        ${calendarHintCSS}`;
       document.documentElement.append(style);
     }
     for(const [cell] of cells)if(!cell.isConnected)cells.delete(cell);
@@ -72,13 +96,14 @@
       if(!cells.has(cell))cells.set(cell,{label:cell.getAttribute('aria-label')});
       const phase=state.phase==='upcoming'?(date===dates?.next?'next':'future'):state.phase;
       if(cell.dataset.xrOpening!==phase)cell.dataset.xrOpening=phase;
-      const label=date+' · '+(state.opensAt===null?'오픈 일정 확인 필요':O.stamp(state.opensAt)+' 오픈 · 잔여석 미확인');
+      const label=date+' · '+(state.opensAt===null?'오픈 일정 확인 필요':O.stamp(state.opensAt)+' 오픈');
       if(cell.getAttribute('aria-label')!==label)cell.setAttribute('aria-label',label);
-      const hint=state.opensAt===null?'오픈 일정 확인 필요':O.stamp(state.opensAt)+' 오픈 (한국시간)\n잔여석 미확인';
+      const hint=state.opensAt===null?'오픈 일정 확인 필요':O.stamp(state.opensAt)+' 오픈 (한국시간)';
       if(cell.dataset.xrOpeningLabel!==hint)cell.dataset.xrOpeningLabel=hint;
+      setCalendarHint(cell,'opening',hint);
       cells.get(cell).appliedLabel=label;
       let badge=cell.querySelector(':scope > .xr-opening-badge');
-      const calendarTime=O.isOpeningLaterToday(state,now)?O.stamp(state.opensAt).slice(11)+' 오픈':'';
+      const calendarTime=(phase==='next'||O.isOpeningLaterToday(state,now))?O.stamp(state.opensAt).slice(11)+' 오픈':'';
       if(calendarTime||phase==='next'){
         if(!badge){badge=document.createElement('span');badge.className='xr-opening-badge';badge.setAttribute('aria-hidden','true');cell.append(badge);}
         badge.classList.toggle('is-today',!!calendarTime);
@@ -125,7 +150,7 @@
     }
     for(const widget of widgets)if(widget.host.isConnected)widget.render();
   }
-  root.XROpeningUI={create,refresh:tick,getState(){return {ready:true,eligible:window===window.top&&((location.origin==='https://keyescape.com'&&location.pathname==='/reservation1.php')||(location.origin==='https://play33.kr'&&['/reservation','/reservation/create'].includes(location.pathname))),active:active&&(cells.size>0||[...widgets].some(w=>w.host.isConnected))};},configure(config){
+  root.XROpeningUI={create,calendarHintCSS,setCalendarHint,clearCalendarHint,refresh:tick,getState(){return {ready:true,eligible:window===window.top&&((location.origin==='https://keyescape.com'&&location.pathname==='/reservation1.php')||(location.origin==='https://play33.kr'&&['/reservation','/reservation/create'].includes(location.pathname))),active:active&&(cells.size>0||[...widgets].some(w=>w.host.isConnected))};},configure(config){
     const helper=XRSettings.helperState(config,location.origin);
     const enabled=window===window.top&&helper.supported&&helper.registered&&helper.enabled&&helper.opening;
     if(enabled===active)return;
