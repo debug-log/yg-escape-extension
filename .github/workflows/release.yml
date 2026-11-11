@@ -43,6 +43,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build versioned ZIP
         run: python scripts/package.py --tag "$GITHUB_REF_NAME"
+      - name: Create stable download ZIP
+        run: cp "dist/yg-escape-extension-${GITHUB_REF_NAME#v}.zip" dist/yg-escape-extension.zip
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
