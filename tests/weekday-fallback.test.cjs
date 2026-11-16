@@ -55,3 +55,18 @@ test('bundled eoduksini uses distinct Friday, Saturday and Sunday slot IDs',()=>
   assert.equal(E.transform({status:true,data:[{enable:'N'}]},[r],endpoint,'POST','',request).matched,false,'live successful response stays unchanged');
  }
 });
+
+test('bundled ieodosana only supplies confirmed weekday slots',()=>{
+ const r=require('../keyescape-weekday-fallback-rules.json').rules.find(r=>r.id==='keyescape-weekday-fallback-31-97');
+ assert.ok(r);
+ for(const date of ['2026-11-23','2026-11-24','2026-11-25','2026-11-26','2026-11-27','2026-11-28','2026-11-29']){
+  const out=E.transform(failure,[r],endpoint,'POST','',new URLSearchParams({...r.requestParams,date}));
+  const weekday=new Date(date).getUTCDay();
+  assert.equal(out.matched,weekday>=1&&weekday<=4,date);
+  if(out.matched){
+   assert.deepEqual(out.value.data.map(x=>x.num),[3635,3636,3637,3638,3639,3640]);
+   assert.deepEqual(out.value.data.map(x=>x.hh+':'+x.mm),['12:30','14:10','15:50','17:30','19:10','20:50']);
+   assert.ok(out.value.data.every(x=>x.theme_num===97&&x.gubun==='A'));
+  }
+ }
+});

@@ -32,7 +32,7 @@ const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  await until(()=>evaluate(options.sessionId,'typeof config!=="undefined"&&!!config'),'options loaded');
  async function save(patch){return evaluate(options.sessionId,`(async()=>{const before=(await chrome.storage.local.get('config')).config;const after={...before,...${JSON.stringify(patch)}};const r=await chrome.runtime.sendMessage({type:'save',before,after});if(!r.ok)throw Error(r.error);config=r.config;baseline=structuredClone(config);render();return r.config;})()`);}
  const installed=await evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config)");
- assert.equal(installed.rules.filter(r=>r.action==='weekdayFallback').length,34);
+ assert.equal(installed.rules.filter(r=>r.action==='weekdayFallback').length,35);
  assert.equal(installed.enabled,false);
  await save({enabled:false,sites:['https://keyescape.com'],rules:installed.rules});
  async function fixtureTab(url){const t=await tab('about:blank');await call('Fetch.enable',{patterns:[{urlPattern:'https://keyescape.com/*',resourceType:'Document',requestStage:'Request'}]},t.sessionId);await call('Page.navigate',{url},t.sessionId);await until(()=>evaluate(t.sessionId,"!!document.querySelector('#date')"),'fixture loaded');return {...t,url};}
@@ -184,7 +184,7 @@ const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  await evaluate(options.sessionId,"showMode(false);[...document.querySelectorAll('#sites input')].find(el=>el.getAttribute('aria-label')?.includes('방해 완화')).click()",true);
  await until(async()=>(await state()).antiDebug.reloadRequired,'advanced setting disables anti-debug');
  await evaluate(options.sessionId,"showMode(false);document.querySelector('#restoreDefaults').click()",true);
- await until(()=>evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config.rules.filter(x=>x.action==='weekdayFallback').length===34)"),'settings restores defaults');
+ await until(()=>evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config.rules.filter(x=>x.action==='weekdayFallback').length===35)"),'settings restores defaults');
  const restored=await evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config)");
  assert.equal(restored.enabled,false);assert.equal(restored.keyescapeDateUnlockEnabled,false);
  await call('Emulation.setDeviceMetricsOverride',{width:380,height:720,deviceScaleFactor:1,mobile:false},popup.sessionId);
@@ -205,7 +205,7 @@ const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  await until(()=>evaluate(registrationPopup.sessionId,"document.querySelector('#addCurrentSite')?.hidden===false"),'unregistered popup');
  await evaluate(registrationPopup.sessionId,"document.querySelector('#addCurrentSite').click()",true);
  await until(()=>evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config.sites.includes('https://keyescape.com')&&r.config.keyescapeDateUnlockEnabled)"),'popup registers site with already granted permission');
- assert.equal(await evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config.rules.filter(x=>x.action==='weekdayFallback').length)"),34);
+ assert.equal(await evaluate(options.sessionId,"chrome.storage.local.get('config').then(r=>r.config.rules.filter(x=>x.action==='weekdayFallback').length)"),35);
  console.log('PASS install defaults, popup toggles, missing-rule restore, date toggle without reload and site registration');
  console.log('PASS toggle persistence, immediate stop, in-place restoration, popup and unregistered site');
 }catch(e){console.error(e);process.exitCode=1;}finally{

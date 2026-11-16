@@ -19,13 +19,13 @@ const initial = {
   }]
 };
 let queue = Promise.resolve();
-const KEYESCAPE_DEFAULTS_VERSION = 4;
+const KEYESCAPE_DEFAULTS_VERSION = 5;
 
 async function addDefaultRules(config) {
   const response = await fetch(chrome.runtime.getURL('keyescape-weekday-fallback-rules.json'));
   if (!response.ok) throw Error('기본 규칙 파일을 불러오지 못했습니다.');
   const {rules} = await response.json();
-  if (!Array.isArray(rules) || rules.length !== 34) throw Error('기본 규칙 파일을 확인해주세요.');
+  if (!Array.isArray(rules) || rules.length !== 35) throw Error('기본 규칙 파일을 확인해주세요.');
   const defaultsById = new Map(rules.map(rule => [rule.id, rule]));
   const merged = config.rules.map(rule => {
     const bundled = defaultsById.get(rule.id);

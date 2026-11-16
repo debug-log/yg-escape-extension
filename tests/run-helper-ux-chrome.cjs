@@ -25,7 +25,7 @@ const deadline=setTimeout(()=>{console.error('Helper UI deadline exceeded');chil
  const ev=code=>evaluate(options.sessionId,code),click=id=>evaluate(options.sessionId,`document.getElementById('${id}').click()`,true);
  const saved=()=>ev("chrome.storage.local.get('config').then(r=>r.config)");
  await until(()=>ev('typeof baseline!=="undefined"&&!!baseline'),'stable initial configuration');
- assert.equal((await saved()).rules.filter(r=>r.action==='weekdayFallback').length,34,'initialization waits for default rules');
+ assert.equal((await saved()).rules.filter(r=>r.action==='weekdayFallback').length,35,'initialization waits for default rules');
  assert.equal((await saved()).keyescapeTimetableEnabled,false);
  assert.equal(await ev("document.querySelector('#advanced').hidden"),true);
  assert.equal(await ev("document.querySelector('#quickForm').closest('#advanced')!==null"),true);

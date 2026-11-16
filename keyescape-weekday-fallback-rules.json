@@ -1080,6 +1080,217 @@
       ]
     },
     {
+      "id": "keyescape-weekday-fallback-31-97",
+      "name": "백산방역 · 미명도감: 이어도사나 · 이전 같은 요일",
+      "site": "https://keyescape.com",
+      "enabled": true,
+      "url": "https://keyescape.com/controller/run_proc.php",
+      "match": "exact",
+      "method": "POST",
+      "requestParams": {
+        "t": "get_theme_time",
+        "zizumNum": "31",
+        "themeNum": "97"
+      },
+      "conditions": [
+        {
+          "path": "status",
+          "op": "equals",
+          "value": false
+        }
+      ],
+      "action": "weekdayFallback",
+      "dateParam": "date",
+      "weekdayGroups": [
+        [
+          1,
+          2,
+          3,
+          4
+        ]
+      ],
+      "allowedMessages": [
+        "예약가능시간이 아닙니다. 예약오픈시간 : 09:30",
+        "예약 가능 한 날짜가 아닙니다."
+      ],
+      "samples": [
+        {
+          "date": "2026-11-17",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 3635,
+                "gubun": "A",
+                "theme_num": 97,
+                "hh": "12",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3636,
+                "gubun": "A",
+                "theme_num": 97,
+                "hh": "14",
+                "mm": "10",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3637,
+                "gubun": "A",
+                "theme_num": 97,
+                "hh": "15",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3638,
+                "gubun": "A",
+                "theme_num": 97,
+                "hh": "17",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3639,
+                "gubun": "A",
+                "theme_num": 97,
+                "hh": "19",
+                "mm": "10",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3640,
+                "gubun": "A",
+                "theme_num": 97,
+                "hh": "20",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
+        },
+        {
+          "date": "2026-11-18",
+          "response": {
+            "status": true,
+            "msg": "",
+            "data": [
+              {
+                "num": 3635,
+                "gubun": "A",
+                "theme_num": 97,
+                "hh": "12",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3636,
+                "gubun": "A",
+                "theme_num": 97,
+                "hh": "14",
+                "mm": "10",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3637,
+                "gubun": "A",
+                "theme_num": 97,
+                "hh": "15",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3638,
+                "gubun": "A",
+                "theme_num": 97,
+                "hh": "17",
+                "mm": "30",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3639,
+                "gubun": "A",
+                "theme_num": 97,
+                "hh": "19",
+                "mm": "10",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              },
+              {
+                "num": 3640,
+                "gubun": "A",
+                "theme_num": 97,
+                "hh": "20",
+                "mm": "50",
+                "sale_ck": "N",
+                "sale_price": 0,
+                "sale_doc": "조조",
+                "enable": "N",
+                "sale_one": "N",
+                "sale_txt": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "keyescape-weekday-fallback-23-71",
       "name": "후즈데어 · AYAKO · 이전 같은 요일",
       "site": "https://keyescape.com",

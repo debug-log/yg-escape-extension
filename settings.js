@@ -15,6 +15,7 @@
 
   const bundledRuleIds = new Set([
     "keyescape-weekday-fallback-31-96",
+    "keyescape-weekday-fallback-31-97",
     "keyescape-weekday-fallback-23-71",
     "keyescape-weekday-fallback-23-69",
     "keyescape-weekday-fallback-23-70",

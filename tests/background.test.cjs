@@ -43,8 +43,8 @@ test('date script is available before bridge configuration in isolated world',as
 test('missing defaults are seeded once without losing existing rules or global switch',async()=>{
  const f=fixture();await f.send({type:'sync'});
  const seeded=f.get().config;
- assert.equal(seeded.rules.filter(r=>r.action==='weekdayFallback').length,34);
- assert.equal(seeded.keyescapeDefaultsVersion,4);
+ assert.equal(seeded.rules.filter(r=>r.action==='weekdayFallback').length,35);
+ assert.equal(seeded.keyescapeDefaultsVersion,5);
  const edited={...seeded.rules[0],name:'my edit',enabled:false};
  const after={...seeded,enabled:false,rules:[edited,{id:'custom',name:'keep me'}]};
  await f.send({type:'save',before:structuredClone(seeded),after});
@@ -65,7 +65,7 @@ test('older defaults gain missing bundled samples and weekday groups without ove
 
  const config=f.get().config;
  const migrated=config.rules.find(r=>r.id===old.id);
- assert.equal(config.keyescapeDefaultsVersion,4);
+ assert.equal(config.keyescapeDefaultsVersion,5);
  assert.equal(migrated.name,'my AYAKO');assert.equal(migrated.enabled,false);
  assert.equal(migrated.samples[0].response.data[0].enable,'N');
  assert.ok(migrated.samples.some(s=>s.date==='2026-11-08'));
@@ -87,14 +87,14 @@ test('version 2 eoduksini rule gains its bundled weekday group',async()=>{
 test('bundled defaults validate and distinguish official samples from provided weekday templates',()=>{
  const {rules}=JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8'));
  const engine=require('../engine.js');
- assert.equal(rules.length,34);assert.equal(new Set(rules.map(r=>r.id)).size,34);
- assert.equal(rules.reduce((n,r)=>n+r.samples.length,0),236);
+ assert.equal(rules.length,35);assert.equal(new Set(rules.map(r=>r.id)).size,35);
+ assert.equal(rules.reduce((n,r)=>n+r.samples.length,0),238);
  for(const r of rules)engine.validate(r);
 });
 
 test('new installation automatically loads defaults without enabling global responses',async()=>{
  const f=fixture();f.setConfig(undefined);await f.send({type:'sync'});
- assert.equal(f.get().config.rules.filter(r=>r.action==='weekdayFallback').length,34);
+ assert.equal(f.get().config.rules.filter(r=>r.action==='weekdayFallback').length,35);
  assert.equal(f.get().config.enabled,false);
 });
 test('upgrade and explicit restoration preserve customized defaults and unrelated settings',async()=>{
@@ -102,11 +102,11 @@ test('upgrade and explicit restoration preserve customized defaults and unrelate
  const custom={...defaults[0],name:'edited',enabled:false};
  const f=fixture();f.setConfig({enabled:false,sites:[],rules:[custom,{id:'mine',name:'personal'}],keyescapeDateUnlockEnabled:false});
  await f.send({type:'sync'});
- assert.equal(f.get().config.rules.length,35);assert.equal(f.get().config.rules[0].name,'edited');
+ assert.equal(f.get().config.rules.length,36);assert.equal(f.get().config.rules[0].name,'edited');
  const before=structuredClone(f.get().config);
  await f.send({type:'save',before,after:{...before,rules:[custom,{id:'mine',name:'personal'}]}});
  const result=await f.send({type:'siteSetting',site:'https://keyescape.com',setting:'restoreDefaults'});
- assert.equal(result.ok,true);assert.equal(result.config.rules.length,35);
+ assert.equal(result.ok,true);assert.equal(result.config.rules.length,36);
  assert.equal(result.config.rules[0].enabled,false);assert.equal(result.config.rules[0].name,'edited');
  assert.equal(result.config.keyescapeDateUnlockEnabled,false);assert.equal(result.config.enabled,false);
  assert.ok(result.config.sites.includes('https://keyescape.com'));
@@ -169,4 +169,13 @@ test('version 3 installation gains user-provided eoduksini weekends without losi
  const provided=r.samples.filter(s=>s.source?.type==='user-provided');
  assert.equal(provided.length,3);
  assert.ok(provided.every(s=>s.source.dateBasis==='weekday-reference'&&s.source.verification==='not-live-verified'));
+});
+
+test('version 4 installations gain ieodosana without changing timetable preference',async()=>{
+ const f=fixture();f.setConfig({enabled:false,sites:[],rules:[{id:'mine',name:'personal'}],keyescapeTimetableEnabled:false,keyescapeDefaultsVersion:4});
+ await f.send({type:'sync'});
+ assert.ok(f.get().config.rules.some(r=>r.id==='keyescape-weekday-fallback-31-97'));
+ assert.ok(f.get().config.rules.some(r=>r.id==='mine'));
+ assert.equal(f.get().config.keyescapeTimetableEnabled,false);
+ assert.equal(f.get().config.keyescapeDefaultsVersion,5);
 });
