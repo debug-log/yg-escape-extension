@@ -6,6 +6,10 @@ const root=path.resolve(__dirname,'..');
 const temp=fs.mkdtempSync(path.join(os.tmpdir(),'xre-date-'));
 const extensionDir=path.join(temp,'extension');fs.mkdirSync(extensionDir);
 for(const file of fs.readdirSync(root))if(/\.(js|html|css|json)$/.test(file)&&(!file.startsWith('keyescape-')||file==='keyescape-weekday-fallback-rules.json'))fs.copyFileSync(path.join(root,file),path.join(extensionDir,file));
+// Freeze only the disposable extension's clock; fixture dates must not age out.
+const fixtureNow=Date.parse('2026-11-03T12:00:00+09:00');
+const fixtureSettings=path.join(extensionDir,'settings.js');
+fs.writeFileSync(fixtureSettings,`Date.now=()=>${fixtureNow};\n`+fs.readFileSync(fixtureSettings,'utf8'));
 fs.cpSync(path.join(root,'icons'),path.join(extensionDir,'icons'),{recursive:true});
 fs.cpSync(path.join(root,'vendor'),path.join(extensionDir,'vendor'),{recursive:true});
 const manifest=JSON.parse(fs.readFileSync(path.join(extensionDir,'manifest.json')));
@@ -84,7 +88,7 @@ const fixture='<!doctype html><meta charset="utf-8"><meta name="viewport" conten
  assert.equal(await ev("document.querySelector('#date').hasAttribute('title')"),false,'native tooltip suppressed');
  assert.equal(await ev("document.querySelector('#date').dataset.xrCalendarHint"),'2026-11-03 09:30 오픈 (한국시간)\n확장 프로그램으로 선택 제한을 해제한 날짜\n원래 날짜 안내');
  assert.equal(await ev("document.querySelector('#date').getAttribute('aria-label').includes('잔여석 미확인')"),false);
- const upcoming=require('../opening.js').range(require('../opening.js').rule('keyescape','31',3)).next;
+ const upcoming=require('../opening.js').range(require('../opening.js').rule('keyescape','31',3),fixtureNow).next;
  await ev(`(async()=>{const cell=document.createElement('td');cell.className='selDate disabled';cell.dataset.date='${upcoming}';cell.id='nearest';document.querySelector('tr').append(cell);await Promise.resolve();})()`);
  await until(()=>ev("document.querySelector('#nearest .xr-opening-badge')?.textContent==='09:30 오픈'"),'nearest opening date displays time even after today opening');
  await save({openingDisabledSites:['https://keyescape.com']});
