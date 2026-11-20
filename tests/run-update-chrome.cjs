@@ -96,7 +96,7 @@ const deadline=setTimeout(()=>{console.error('Updater integration deadline excee
  assert.equal(await evaluate(s,`!document.getElementById('setup').hidden && document.getElementById('install').hidden`),true);
  await screenshot(s,'initial-setup');
  // Store a custom rule and page target, then reconnect a real installation handle.
- await evaluate(s,`(async()=>{await chrome.runtime.sendMessage({type:'sync'});const {config}=await chrome.storage.local.get('config');config.rules.push({id:'personal',name:'preserve me'});config.sites=[${JSON.stringify(origin)}];await chrome.storage.local.set({config});const tabs=await chrome.tabs.query({});const tab=tabs.find(t=>t.url===${JSON.stringify(origin+'/page')});await chrome.storage.session.set({updateTarget:{id:tab.id,url:tab.url}});})()`);
+ await evaluate(s,`(async()=>{await chrome.runtime.sendMessage({type:'sync'});const {config:before}=await chrome.storage.local.get('config');const after=structuredClone(before);after.rules.push({id:'personal',name:'preserve me'});after.sites=[${JSON.stringify(origin)}];const saved=await chrome.runtime.sendMessage({type:'save',before,after});if(!saved.ok)throw Error(saved.error);const tabs=await chrome.tabs.query({});const tab=tabs.find(t=>t.url===${JSON.stringify(origin+'/page')});await chrome.storage.session.set({updateTarget:{id:tab.id,url:tab.url}});})()`);
  // A second copy with identical files must not pass the installation proof.
  await drop(s,candidate);
  assert.equal(await evaluate(s,`XREUpdate.verifyDirectory(testDirectory,name=>fetch(chrome.runtime.getURL(name),{cache:'no-store'})).then(()=>false,()=>true)`),true);
