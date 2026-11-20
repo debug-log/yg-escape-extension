@@ -12,6 +12,7 @@
     const response = XRSettings.responseConfig(config, location.origin);
     if (typeof XRDateUnlock !== 'undefined') XRDateUnlock.configure(config);
     if (typeof XRPlay33 !== 'undefined') XRPlay33.configure(config);
+    if (typeof XRRabbithole !== 'undefined') XRRabbithole.configure(config);
     if (typeof XROpeningUI !== 'undefined') XROpeningUI.configure(config);
     window.postMessage({
       source: 'xr-editor-bridge',
@@ -65,6 +66,7 @@
         antiDebug,
         dateUnlock: typeof XRDateUnlock !== 'undefined' ? XRDateUnlock.getState() : null,
         play33: typeof XRPlay33 !== 'undefined' ? XRPlay33.getState() : null,
+        rabbithole: typeof XRRabbithole !== 'undefined' ? XRRabbithole.getState() : null,
         opening: typeof XROpeningUI !== 'undefined' ? XROpeningUI.getState() : null
       });
     }

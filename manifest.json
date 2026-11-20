@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
   "name": "YG Escpae Extension",
-  "version": "1.6.5",
-  "description": "키이스케이프·플레이33의 예약 오픈 일정과 날짜·시간 선택을 돕습니다. 고급 설정에서 사이트별 응답 규칙을 관리할 수 있습니다.",
+  "version": "1.6.7",
+  "description": "예약 사이트의 오픈 일정과 남은 시간을 확인하고, 원하는 날짜와 시간 선택을 편리하게 도와주는 크롬 예약 도우미입니다.",
   "minimum_chrome_version": "111",
   "permissions": [
+    "alarms",
     "storage",
     "scripting",
     "activeTab"
@@ -14,6 +15,7 @@
     "https://*/*"
   ],
   "host_permissions": [
+    "https://raw.githubusercontent.com/*",
     "https://api.github.com/*",
     "https://github.com/*",
     "https://release-assets.githubusercontent.com/*"

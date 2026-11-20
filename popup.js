@@ -9,14 +9,15 @@
       await chrome.storage.session.set({pageContext: {url: page.href}});
     }
   } catch {}
-  const key = origin === 'https://keyescape.com', play = origin === 'https://play33.kr';
-  const supported = key || play;
-  $('site').textContent = key ? '키이스케이프' : play ? '플레이33' : origin ? page.host : '웹페이지를 열어주세요';
+  const key = XRSettings.canonicalSite(origin) === 'https://keyescape.com', play = origin === 'https://play33.kr', rabbit = origin === 'https://www.rabbitholeescape.co.kr';
+  const selection = play || rabbit, selectionSetting = rabbit ? 'rabbithole' : 'play33';
+  const supported = key || selection;
+  $('site').textContent = key ? '키이스케이프' : play ? '플레이33' : rabbit ? '래빗홀' : origin ? page.host : '웹페이지를 열어주세요';
   $('siteAddress').textContent = supported ? page.host : '';
   $('helperFeatures').hidden = !supported;
   $('dateUnlockFeature').hidden = !key;
   $('timetableFeature').hidden = !key;
-  $('play33Feature').hidden = !play;
+  $('play33Feature').hidden = !selection;
   $('activity').hidden = !key;
   $('manage').onclick = () => chrome.runtime.openOptionsPage();
   $('reload').onclick = () => { chrome.tabs.reload(tab.id); window.close(); };
@@ -40,7 +41,7 @@
     $('popupMessage').className = '';
     try {
       if (setting === 'startHelper') {
-        const granted = await chrome.permissions.request({origins: [origin + '/*']});
+        const granted = await chrome.permissions.request({origins: XRSettings.permissionOrigins(origin)});
         if (!granted) throw Error('사이트 접근 권한이 허용되지 않아 시작하지 않았습니다. 사용 시작을 눌러 다시 허용해주세요.');
       }
       const command = {type: 'siteSetting', site: origin, setting};
@@ -56,7 +57,7 @@
       await refresh();
     }
   }
-  for (const [id, setting] of [['helperToggle', 'helper'], ['openingToggle', 'opening'], ['dateUnlockToggle', 'dateUnlock'], ['timetableToggle', 'timetable'], ['play33Toggle', 'play33']]) {
+  for (const [id, setting] of [['helperToggle', 'helper'], ['openingToggle', 'opening'], ['dateUnlockToggle', 'dateUnlock'], ['timetableToggle', 'timetable'], ['play33Toggle', selectionSetting]]) {
     $(id).onchange = () => change(setting, $(id).checked);
   }
   $('addCurrentSite').onclick = () => { if (!$('addCurrentSite').disabled) return change('startHelper'); };
@@ -76,13 +77,13 @@
     $('helperToggle').disabled = !supported || !helper.registered;
     $('addCurrentSite').hidden = !supported || helper.registered;
     $('addCurrentSite').disabled = !supported || helper.registered;
-    for (const [id, choice] of [['openingToggle', helper.opening], ['dateUnlockToggle', helper.dateUnlock], ['timetableToggle', helper.timetable], ['play33Toggle', helper.play33]]) {
+    for (const [id, choice] of [['openingToggle', helper.opening], ['dateUnlockToggle', helper.dateUnlock], ['timetableToggle', helper.timetable], ['play33Toggle', helper[selectionSetting]]]) {
       $(id).checked = choice;
       $(id).disabled = !active;
     }
     const eligibleDate = key && page.pathname === '/reservation1.php';
-    const eligiblePlay = play && page.pathname === '/reservation/create';
-    const eligibleOpening = eligibleDate || play && ['/reservation', '/reservation/create'].includes(page.pathname);
+    const eligiblePlay = selection && page.pathname === '/reservation/create';
+    const eligibleOpening = eligibleDate || selection && ['/reservation', '/reservation/create'].includes(page.pathname);
     let reload = false;
     function status(chosen, eligible, actual, waiting) {
       if (!helper.registered) return '사용 시작 후 적용';
@@ -94,7 +95,7 @@
     }
     const openingText = status(helper.opening, eligibleOpening, state?.opening, '예약 목록·입력 페이지에서 사용');
     const dateText = status(helper.dateUnlock, eligibleDate, state?.dateUnlock, '예약 날짜 선택 페이지에서 사용');
-    const playText = status(helper.play33, eligiblePlay, state?.play33, '예약 정보 입력 페이지에서 사용');
+    const playText = status(helper[selectionSetting], eligiblePlay, state?.[selectionSetting], '예약 정보 입력 페이지에서 사용');
     const timetableRules = config.rules.filter(rule => XRSettings.isBundledRule(rule) && rule.enabled);
     let timetableText;
     if (!helper.registered) timetableText = '사용 시작 후 적용';
@@ -108,13 +109,13 @@
     $('dateUnlockState').textContent = dateText;
     $('play33State').textContent = playText;
     $('state').textContent = timetableText;
-    const hasFeatures = helper.opening || key && (helper.dateUnlock || helper.timetable) || play && helper.play33;
+    const hasFeatures = helper.opening || key && (helper.dateUnlock || helper.timetable) || selection && helper[selectionSetting];
     $('helperState').textContent = !supported ? origin ? '예약 도우미를 지원하지 않는 사이트입니다.' : '이 페이지에서는 예약 도우미를 사용할 수 없습니다.'
       : !helper.registered ? '사용 전 · 사이트 접근 권한이 필요합니다.'
       : !helper.enabled ? '예약 도우미 꺼짐'
       : !hasFeatures ? '켜진 기능 없음' : reload ? '설정 저장됨 · 새로고침 필요' : '예약 도우미 켜짐';
     $('helperState').className = 'helper-state' + (active && hasFeatures ? reload ? ' is-pending' : ' is-on' : '');
-    $('helperNote').textContent = !supported ? origin ? '일반 사이트의 응답 규칙은 설정 → 고급 설정에서 관리하세요.' : '키이스케이프 또는 플레이33 예약 사이트에서 열어주세요.'
+    $('helperNote').textContent = !supported ? origin ? '일반 사이트의 응답 규칙은 설정 → 고급 설정에서 관리하세요.' : '키이스케이프·플레이33·래빗홀 예약 사이트에서 열어주세요.'
       : !helper.registered ? '사용 시작을 누르면 이 사이트의 기본 기능을 함께 켭니다.'
       : !helper.enabled ? '다시 켜면 이전에 선택한 기능을 복원합니다. 사용자 응답 규칙은 고급 설정에서 별도로 관리합니다.'
       : '오픈 시각과 실제 잔여석은 다를 수 있습니다. 예약 가능 여부는 사이트에서 확인하세요.';

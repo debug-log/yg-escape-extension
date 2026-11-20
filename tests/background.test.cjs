@@ -1,6 +1,35 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const vm=require('node:vm');const fs=require('node:fs');
-function fixture(fail=false){let config={enabled:true,sites:['https://example.com'],rules:[]},handler,registered=[],permitted=true;const event={addListener(){}};const chrome={runtime:{id:'test',getURL:p=>p,onInstalled:event,onStartup:event,onMessage:{addListener(fn){handler=fn;}}},permissions:{contains:async()=>permitted,onRemoved:event,onAdded:event},storage:{local:{get:async()=>({config}),set:async obj=>{config=obj.config;}}},scripting:{getRegisteredContentScripts:async()=>registered,unregisterContentScripts:async()=>{registered=[];},registerContentScripts:async scripts=>{if(fail)throw Error('denied');registered=scripts;},updateContentScripts:async scripts=>{if(fail)throw Error('denied');registered=scripts;}}};const ctx=vm.createContext({URL,fetch:async()=>({ok:true,json:async()=>JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8'))}),chrome,console:{error(){}},structuredClone});ctx.importScripts=()=>vm.runInContext(fs.readFileSync('settings.js','utf8'),ctx);vm.runInContext(fs.readFileSync('background.js','utf8'),ctx);return {send:m=>new Promise(resolve=>handler(m,{id:'test',url:'chrome-extension://test/options.html',tab:{id:1}},resolve)),get:()=>({config,registered}),setConfig:value=>{config=value;},revoke:()=>{permitted=false;}};}
+function fixture(fail=false){let extra={}, config={enabled:true,sites:['https://example.com'],rules:[]},handler,registered=[],permitted=true;const event={addListener(){}};const chrome={alarms:{get:async()=>({}),create(){},onAlarm:event},runtime:{id:'test',getURL:p=>p,onInstalled:event,onStartup:event,onMessage:{addListener(fn){handler=fn;}}},permissions:{contains:async()=>permitted,onRemoved:event,onAdded:event},storage:{local:{get:async()=>({...extra,config}),set:async obj=>{if('config' in obj)config=obj.config;for(const [k,v] of Object.entries(obj))if(k!=='config')extra[k]=v;}}},scripting:{getRegisteredContentScripts:async()=>registered,unregisterContentScripts:async()=>{registered=[];},registerContentScripts:async scripts=>{if(fail)throw Error('denied');registered=scripts;},updateContentScripts:async scripts=>{if(fail)throw Error('denied');registered=scripts;}}};const ctx=vm.createContext({URL,TextEncoder,fetch:async()=>({ok:true,json:async()=>JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8'))}),chrome,console:{error(){}},structuredClone});ctx.importScripts=(...files)=>files.forEach(file=>vm.runInContext(fs.readFileSync(file,'utf8'),ctx));vm.runInContext(fs.readFileSync('background.js','utf8'),ctx);return {send:m=>new Promise(resolve=>handler(m,{id:'test',url:'chrome-extension://test/options.html',tab:{id:1}},resolve)),get:()=>({config,registered,extra}),setExtra:value=>{extra=value;},setConfig:value=>{config=value;},revoke:()=>{permitted=false;}};}
 test('registration errors return failure instead of success',async()=>{const f=fixture(true);const result=await f.send({type:'sync'});assert.equal(result.ok,false);assert.match(result.error,/denied/);});
+
+test('Rabbit Hole startup and panel settings remain independent of Play33',async()=>{
+ const f=fixture(),site='https://www.rabbitholeescape.co.kr';
+ f.setConfig({enabled:false,sites:[],rules:[],play33Enabled:false});
+ const r=await f.send({type:'siteSetting',site,setting:'startHelper'});
+ assert.equal(r.ok,true);assert.equal(r.config.rabbitholeEnabled,true);assert.equal(r.config.play33Enabled,false);
+ assert.ok(f.get().registered.find(s=>s.id==='xr-bridge').js.includes('rabbithole.js'));
+ const disabled=await f.send({type:'siteSetting',site,setting:'rabbithole',enabled:false});
+ assert.equal(disabled.ok,true);assert.equal(disabled.config.rabbitholeEnabled,false);
+ assert.equal((await f.send({type:'siteSetting',site:'https://play33.kr',setting:'rabbithole',enabled:true})).ok,false);
+});
+
+test('www helper startup registers both granted hosts and shares helper settings',async()=>{
+ const f=fixture();
+ const site='https://www.keyescape.com';
+ let result=await f.send({type:'siteSetting',site,setting:'startHelper'});
+ assert.equal(result.ok,true);
+ for(const script of f.get().registered){
+  assert.ok(script.matches.includes('https://keyescape.com/*'));
+  assert.ok(script.matches.includes(site+'/*'));
+ }
+ result=await f.send({type:'siteSetting',site,setting:'helper',enabled:false});
+ assert.equal(result.ok,true);
+ const settings=require('../settings.js');
+ assert.equal(settings.helperState(result.config,site).enabled,false);
+ assert.equal(settings.helperState(result.config,'https://keyescape.com').enabled,false);
+ f.revoke();await f.send({type:'sync'});
+ assert.equal(f.get().registered.length,0);
+});
 
 test('quick registration is permission-gated, idempotent and preserves settings',async()=>{
  const f=fixture();await f.send({type:'sync'});const original=structuredClone(f.get().config);
@@ -37,14 +66,14 @@ test('revoked host permission clears site exception and all registrations',async
 test('date script is available before bridge configuration in isolated world',async()=>{
  const f=fixture();await f.send({type:'sync'});
  const bridge=f.get().registered.find(s=>s.id==='xr-bridge');
- assert.deepEqual(Array.from(bridge.js),['settings.js','date-unlock.js','opening.js','opening-ui.js','play33.js','bridge.js']);
+ assert.deepEqual(Array.from(bridge.js),['settings.js','date-unlock.js','opening.js','opening-ui.js','play33.js','rabbithole.js','bridge.js']);
 });
 
 test('missing defaults are seeded once without losing existing rules or global switch',async()=>{
  const f=fixture();await f.send({type:'sync'});
  const seeded=f.get().config;
  assert.equal(seeded.rules.filter(r=>r.action==='weekdayFallback').length,35);
- assert.equal(seeded.keyescapeDefaultsVersion,5);
+ assert.equal(seeded.keyescapeDefaultsVersion,6);
  const edited={...seeded.rules[0],name:'my edit',enabled:false};
  const after={...seeded,enabled:false,rules:[edited,{id:'custom',name:'keep me'}]};
  await f.send({type:'save',before:structuredClone(seeded),after});
@@ -53,7 +82,7 @@ test('missing defaults are seeded once without losing existing rules or global s
  assert.equal(f.get().config.rules.length,2,'intentional deletion is not undone every sync');
  assert.equal(f.get().config.rules[0].name,'my edit');
 });
-test('older defaults gain missing bundled samples and weekday groups without overwriting user edits',async()=>{
+test('older defaults preserve edited timetable rules during migration',async()=>{
  const defaults=JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8')).rules;
  const bundled=defaults.find(r=>r.id==='keyescape-weekday-fallback-23-71');
  const old={...structuredClone(bundled),name:'my AYAKO',enabled:false,
@@ -65,15 +94,14 @@ test('older defaults gain missing bundled samples and weekday groups without ove
 
  const config=f.get().config;
  const migrated=config.rules.find(r=>r.id===old.id);
- assert.equal(config.keyescapeDefaultsVersion,5);
+ assert.equal(config.keyescapeDefaultsVersion,6);
  assert.equal(migrated.name,'my AYAKO');assert.equal(migrated.enabled,false);
  assert.equal(migrated.samples[0].response.data[0].enable,'N');
- assert.ok(migrated.samples.some(s=>s.date==='2026-11-08'));
- assert.equal(migrated.samples.length,bundled.samples.length);
+ assert.deepEqual(structuredClone(migrated.samples),old.samples);
  assert.ok(config.rules.some(r=>r.id==='mine'));
- assert.deepEqual(structuredClone(config.rules.find(r=>r.id==='keyescape-weekday-fallback-31-96').weekdayGroups),[[1,2,3,4]]);
+ assert.ok(!config.rules.some(r=>r.id==='keyescape-weekday-fallback-31-96'),'deleted defaults stay deleted');
 });
-test('version 2 eoduksini rule gains its bundled weekday group',async()=>{
+test('unknown legacy weekday customizations remain untouched',async()=>{
  const bundled=JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8')).rules[0];
  const old=structuredClone(bundled);delete old.weekdayGroups;old.name='my eoduksini';
  const f=fixture();f.setConfig({enabled:false,sites:[],rules:[old],keyescapeDefaultsVersion:2});
@@ -82,13 +110,13 @@ test('version 2 eoduksini rule gains its bundled weekday group',async()=>{
 
  const migrated=f.get().config.rules.find(r=>r.id===old.id);
  assert.equal(migrated.name,'my eoduksini');
- assert.deepEqual(structuredClone(migrated.weekdayGroups),[[1,2,3,4]]);
+ assert.equal(migrated.weekdayGroups,undefined);
 });
 test('bundled defaults validate and distinguish official samples from provided weekday templates',()=>{
  const {rules}=JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8'));
  const engine=require('../engine.js');
  assert.equal(rules.length,35);assert.equal(new Set(rules.map(r=>r.id)).size,35);
- assert.equal(rules.reduce((n,r)=>n+r.samples.length,0),238);
+ assert.equal(rules.reduce((n,r)=>n+r.samples.length,0),240);
  for(const r of rules)engine.validate(r);
 });
 
@@ -154,7 +182,7 @@ test('new helper commands reject wrong sites and denied permission without mutat
  assert.deepEqual(structuredClone(f.get().config),before);
 });
 
-test('version 3 installation gains user-provided eoduksini weekends without losing edits',async()=>{
+test('version 3 customized timetable remains untouched',async()=>{
  const bundled=JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8')).rules.find(r=>r.id==='keyescape-weekday-fallback-31-96');
  const old={...structuredClone(bundled),name:'my eoduksini',enabled:false,samples:structuredClone(bundled.samples.filter(s=>['2026-11-02','2026-11-03'].includes(s.date)))};
  old.samples[0].response.data[0].enable='N';
@@ -165,9 +193,9 @@ test('version 3 installation gains user-provided eoduksini weekends without losi
  assert.equal(config.enabled,false);assert.equal(config.keyescapeTimetableEnabled,false);
  assert.equal(r.samples.find(s=>s.date==='2026-11-02').response.data[0].enable,'N');
  assert.ok(config.rules.some(r=>r.id==='mine'));
- assert.deepEqual([...new Set(r.samples.map(s=>s.response.data[0].gubun))].sort(),['A','B','C','D']);
+ assert.deepEqual(structuredClone(r.samples),old.samples);
  const provided=r.samples.filter(s=>s.source?.type==='user-provided');
- assert.equal(provided.length,3);
+ assert.equal(provided.length,0);
  assert.ok(provided.every(s=>s.source.dateBasis==='weekday-reference'&&s.source.verification==='not-live-verified'));
 });
 
@@ -177,5 +205,31 @@ test('version 4 installations gain ieodosana without changing timetable preferen
  assert.ok(f.get().config.rules.some(r=>r.id==='keyescape-weekday-fallback-31-97'));
  assert.ok(f.get().config.rules.some(r=>r.id==='mine'));
  assert.equal(f.get().config.keyescapeTimetableEnabled,false);
- assert.equal(f.get().config.keyescapeDefaultsVersion,5);
+ assert.equal(f.get().config.keyescapeDefaultsVersion,6);
+});
+
+test('version 5 installations gain ieodosana weekend samples',async()=>{
+ const bundled=JSON.parse(fs.readFileSync('keyescape-weekday-fallback-rules.json','utf8')).rules.find(r=>r.id==='keyescape-weekday-fallback-31-97');
+ const old=structuredClone(bundled);old.samples=old.samples.filter(s=>s.date<'2026-11-21');old.enabled=false;
+ const f=fixture();f.setConfig({enabled:false,sites:[],rules:[old],keyescapeDefaultsVersion:5});
+ await f.send({type:'sync'});
+ const r=f.get().config.rules.find(r=>r.id===old.id);
+ assert.equal(r.enabled,false);
+ assert.ok(r.samples.some(s=>s.date==='2026-11-21'));
+ assert.ok(r.samples.some(s=>s.date==='2026-11-22'));
+ assert.equal(f.get().config.keyescapeDefaultsVersion,6);
+});
+
+test('restored deleted defaults retain their remote baseline for future updates',async()=>{
+ const C=require('../timetable-core.js'),defaults=require('../keyescape-weekday-fallback-rules.json').rules;
+ const config={enabled:false,sites:[],rules:structuredClone(defaults.slice(1)),keyescapeDefaultsVersion:6};
+ const feed=C.exportFeed(defaults,7);feed.themes[0].samples[0].response.data[0].num=88888;
+ const merged=C.mergeFeed(config,null,feed,defaults),f=fixture();
+ f.setConfig(merged.config);f.setExtra({keyescapeTimetable:merged.state});
+ const result=await f.send({type:'siteSetting',site:'https://keyescape.com',setting:'restoreDefaults'});
+ assert.equal(result.ok,true);
+ assert.equal(result.config.rules.find(r=>r.id===defaults[0].id).samples[0].response.data[0].num,88888);
+ const next=C.exportFeed(defaults,8);next.themes[0].samples[0].response.data[0].num=99999;
+ const updated=C.mergeFeed(result.config,f.get().extra.keyescapeTimetable,next,defaults);
+ assert.equal(updated.config.rules.find(r=>r.id===defaults[0].id).samples[0].response.data[0].num,99999);
 });

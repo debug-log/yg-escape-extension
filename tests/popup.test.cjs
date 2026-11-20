@@ -14,6 +14,20 @@ async function popup(sendMessage, options={}) {
  await vm.runInNewContext(fs.readFileSync('popup.js','utf8'),context);
  return {elements,tick,config};
 }
+test('Rabbit Hole popup controls its own panel and reports active state',async()=>{
+ const site='https://www.rabbitholeescape.co.kr',calls=[];
+ const config={enabled:false,sites:[site],rules:[],play33Enabled:false};
+ const f=await popup(async m=>{calls.push(m);return {ok:true};},{url:site+'/reservation/create',config,
+  pageState:async()=>({rabbithole:{ready:true,active:true},opening:{ready:true,active:true}})});
+ assert.equal(f.elements.get('site').textContent,'래빗홀');
+ assert.equal(f.elements.get('play33Feature').hidden,false);
+ assert.equal(f.elements.get('play33State').textContent,'사용 중');
+ f.elements.get('play33Toggle').checked=false;
+ await f.elements.get('play33Toggle').onchange();
+ assert.equal(calls.at(-1).setting,'rabbithole');assert.equal(calls.at(-1).site,site);
+ assert.equal(config.play33Enabled,false);
+});
+
 test('popup exposes only the supported site features and guides other/internal pages',async()=>{
  for(const [url,dateVisible,playVisible,supported] of [[key,true,false,true],[play+'/reservation/create',false,true,true],['https://example.com',false,false,false],['chrome://extensions',false,false,false]]){
   const f=await popup(async()=>({ok:true}),{url});
@@ -34,6 +48,18 @@ test('permission denial leaves the site unregistered and shows an actionable err
  const calls=[];const f=await popup(async m=>{calls.push(m);return {ok:true};},{requestPermission:async()=>false});
  await f.elements.get('addCurrentSite').onclick();assert.equal(calls.length,1);
  assert.match(f.elements.get('popupMessage').textContent,/권한/);assert.equal(f.elements.get('helperToggle').disabled,true);
+});
+
+test('www popup offers the helper and requests both Keyescape hosts',async()=>{
+ const calls=[];
+ const f=await popup(async m=>{calls.push(m);return {ok:true};},{url:'https://www.keyescape.com/reservation1.php',requestPermission:async p=>{calls.push(p);return true;}});
+ assert.equal(f.elements.get('dateUnlockFeature').hidden,false);
+ assert.equal(f.elements.get('addCurrentSite').hidden,false);
+ await f.elements.get('addCurrentSite').onclick();
+ assert.deepEqual(JSON.parse(JSON.stringify(calls.slice(1))),[
+  {origins:['https://keyescape.com/*','https://www.keyescape.com/*']},
+  {type:'siteSetting',site:'https://www.keyescape.com',setting:'startHelper'}
+ ]);
 });
 test('master off displays saved feature choices disabled, without affecting the other site',async()=>{
  const f=await popup(async()=>({ok:true}),{config:{enabled:false,sites:[key,play],rules:[],helperDisabledSites:[key],openingDisabledSites:[key],keyescapeDateUnlockEnabled:true,keyescapeTimetableEnabled:false}});

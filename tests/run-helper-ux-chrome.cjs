@@ -7,7 +7,7 @@ const extensionDir=path.join(temp,'extension');fs.mkdirSync(extensionDir);
 for(const file of fs.readdirSync(root))if(/\.(js|html|css|json)$/.test(file)&&(!file.startsWith('keyescape-')||file==='keyescape-weekday-fallback-rules.json'))fs.copyFileSync(path.join(root,file),path.join(extensionDir,file));
 for(const dir of ['icons','vendor'])fs.cpSync(path.join(root,dir),path.join(extensionDir,dir),{recursive:true});
 const manifest=JSON.parse(fs.readFileSync(path.join(extensionDir,'manifest.json')));
-manifest.host_permissions=['https://keyescape.com/*','https://play33.kr/*'];
+manifest.host_permissions=['https://www.keyescape.com/*','https://keyescape.com/*','https://play33.kr/*'];
 fs.writeFileSync(path.join(extensionDir,'manifest.json'),JSON.stringify(manifest));
 const binary=process.env.CHROME_PATH||(process.platform==='win32'?'C:/Program Files/Google/Chrome/Application/chrome.exe':process.platform==='linux'?'/usr/bin/google-chrome':'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome');
 const child=spawn(binary,['--headless','--no-first-run','--disable-background-networking','--disable-component-update','--enable-unsafe-extension-debugging','--remote-debugging-pipe','--user-data-dir='+path.join(temp,'profile')],{stdio:['ignore','ignore','ignore','pipe','pipe']});
@@ -41,7 +41,7 @@ const deadline=setTimeout(()=>{console.error('Helper UI deadline exceeded');chil
  await click('keyescapeHelper');await until(()=>ev('!helperBusy'),'master restored');
  assert.equal((await saved()).keyescapeDateUnlockEnabled,false);
  assert.equal(await ev("document.querySelector('#keyescapeOpening').checked&&!document.querySelector('#keyescapeOpening').disabled"),true);
- await click('enablePlay33');await until(()=>ev('!helperBusy'),'Play33 started');assert.equal((await saved()).sites.length,2);
+ await click('enablePlay33');await until(()=>ev('!helperBusy'),'Play33 started');assert.deepEqual((await saved()).sites.slice().sort(),['https://keyescape.com','https://play33.kr','https://www.keyescape.com']);
  assert.equal(await ev("document.querySelector('#enablePlay33').hidden"),true,'registered site hides permission action');
  assert.equal(await ev("!!document.querySelector('#play33Defaults a[href=\"https://play33.kr/reservation\"]')"),true,'reservation link stays available');
  await click('play33Toggle');await until(()=>ev('!helperBusy'),'panel off');assert.equal((await saved()).play33Enabled,false);

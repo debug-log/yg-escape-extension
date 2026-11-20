@@ -33,6 +33,17 @@
       </div></details>
       <details><summary>기본 시간표 보기</summary><p class="muted">2026.11.02~08 조사 기준 · 공휴일·실시간 잔여석 미반영</p><div id="play33Catalog" class="schedule-catalog"></div></details>
     </section>
+    <section id="rabbitholeDefaults" class="helper-card" aria-labelledby="rabbitholeTitle">
+      <div class="card-heading"><h2 id="rabbitholeTitle">래빗홀</h2><input id="rabbitholeHelper" class="toggle" type="checkbox" role="switch" aria-label="래빗홀 예약 도우미" aria-describedby="rabbitholeDefaultState" hidden></div>
+      <p class="card-domain">www.rabbitholeescape.co.kr</p><p id="rabbitholeDefaultState" class="card-status" role="status">설정 확인 중…</p>
+      <ul class="feature-summary"><li>예약 오픈 일정과 카운트다운</li><li>지점·테마·날짜·시간 선택 패널</li></ul>
+      <div class="card-actions"><span class="muted">홍대점 · 2개 테마 기본 시간표</span><button id="enableRabbithole" disabled>사용 시작</button><a class="text-link" href="https://www.rabbitholeescape.co.kr/reservation" target="_blank" rel="noopener noreferrer">예약 사이트 열기</a></div>
+      <details class="feature-details"><summary>기능별 설정</summary><div class="feature-controls">
+        <label class="feature-control" for="rabbitholeOpening"><span>오픈 일정 안내<small>예약 목록과 입력 페이지에서 표시합니다.</small></span><input id="rabbitholeOpening" class="toggle" type="checkbox" role="switch" disabled></label>
+        <label class="feature-control" for="rabbitholeToggle"><span>예약 선택 패널<small>예약 정보 입력 페이지에서 선택을 변경합니다.</small></span><input id="rabbitholeToggle" class="toggle" type="checkbox" role="switch" disabled></label>
+      </div></details>
+      <details><summary>기본 시간표 보기</summary><p class="muted">2026.11.17~23 조사 기준 · 공휴일·실시간 잔여석 미반영</p><div id="rabbitholeCatalog" class="schedule-catalog"></div></details>
+    </section>
   </div>
   <div id="advanced" hidden>
     <section><h2>사용자 응답 규칙</h2><p class="muted">등록한 사이트의 XHR·fetch 응답을 규칙에 따라 변경합니다. 예약 도우미의 기본 시간표는 사이트별 설정을 따릅니다.</p><label class="feature-control" for="globalEnabled"><span>사용자 응답 규칙 적용<small>직접 만든 규칙에 적용되며 예약 도우미와 별도로 동작합니다.</small></span><input id="globalEnabled" class="toggle" type="checkbox" role="switch"></label><button id="newResponseRule">새 응답 규칙 만들기</button></section>
@@ -42,5 +53,5 @@
   </div>
   <p class="page-footnote">표시와 선택을 돕는 기능입니다. 실제 예약은 각 사이트에서 진행합니다. 응답을 변경해도 서버의 예약 상태는 바뀌지 않습니다.</p>
 </main>
-<script src="settings.js"></script><script src="engine.js"></script><script src="ux.js"></script><script src="play33.js"></script><script src="options.js"></script>
+<script src="settings.js"></script><script src="engine.js"></script><script src="ux.js"></script><script src="play33.js"></script><script src="rabbithole.js"></script><script src="options.js"></script>
 </body></html>

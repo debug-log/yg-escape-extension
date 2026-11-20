@@ -111,9 +111,12 @@
       }else badge?.remove();
     }
   }
+  const reservationSite=()=>location.origin==='https://www.rabbitholeescape.co.kr'?'rabbithole':'play33';
+  const panelSelector=()=>reservationSite()==='rabbithole'?'#xr-rabbithole-panel':'#xr-play33-panel';
+  const reservationOrigin=()=>['https://play33.kr','https://www.rabbitholeescape.co.kr'].includes(location.origin);
   function listSelection(){
     const branch=document.querySelector('select[name=branch]')?.value;
-    let rule=O.rule('play33',branch);
+    let rule=O.rule(reservationSite(),branch);
     const days=Number(document.querySelector('#reservation_range_day')?.value),time=document.querySelector('#reservation_range_open_time')?.value;
     if(rule&&Number.isInteger(days)&&days>=1&&days<=366&&/^\d{2}:\d{2}:\d{2}$/.test(time||''))rule={leadDays:days,time:time.slice(0,5)};
     return {date:document.querySelector('input[name=date]')?.value||'',rule};
@@ -124,15 +127,15 @@
     if(!listHint?.host.isConnected){listHint?.dispose();listHint=create(listSelection);field.after(listHint.host);}
   }
   function createScan(){
-    const panel=document.querySelector('#xr-play33-panel')?.shadowRoot;
+    const panel=document.querySelector(panelSelector())?.shadowRoot;
     const form=[...document.forms].find(f=>['branch','theme','date'].every(k=>f.querySelector(`input[type="hidden"][name="${k}"]`)));
     const anchor=panel?.getElementById('date')||form;
     if(!anchor){listHint?.dispose();listHint=null;return;}
     const getSelection=()=>{
-      const panel=document.querySelector('#xr-play33-panel')?.shadowRoot;
+      const panel=document.querySelector(panelSelector())?.shadowRoot;
       const branch=panel?.getElementById('branch')?.value??form.querySelector('input[name="branch"]').value;
       const date=panel?.getElementById('date')?.value??form.querySelector('input[name="date"]').value;
-      return {site:'play33',branch,date,rule:O.rule('play33',branch)};
+      return {site:reservationSite(),branch,date,rule:O.rule(reservationSite(),branch)};
     };
     if(!listHint){listHint=create(getSelection);}
     // Recreate when the form or panel changes so selection readers cannot retain an old form.
@@ -143,14 +146,14 @@
   }
   function tick(){
     if(!active)return;
-    if(location.origin==='https://keyescape.com'&&location.pathname==='/reservation1.php')keyScan();
-    if(location.origin==='https://play33.kr'){
+    if(XRSettings.canonicalSite(location.origin)==='https://keyescape.com'&&location.pathname==='/reservation1.php')keyScan();
+    if(reservationOrigin()){
       if(location.pathname==='/reservation')listScan();
       if(location.pathname==='/reservation/create')createScan();
     }
     for(const widget of widgets)if(widget.host.isConnected)widget.render();
   }
-  root.XROpeningUI={create,calendarHintCSS,setCalendarHint,clearCalendarHint,refresh:tick,getState(){return {ready:true,eligible:window===window.top&&((location.origin==='https://keyescape.com'&&location.pathname==='/reservation1.php')||(location.origin==='https://play33.kr'&&['/reservation','/reservation/create'].includes(location.pathname))),active:active&&(cells.size>0||[...widgets].some(w=>w.host.isConnected))};},configure(config){
+  root.XROpeningUI={create,calendarHintCSS,setCalendarHint,clearCalendarHint,refresh:tick,getState(){return {ready:true,eligible:window===window.top&&((XRSettings.canonicalSite(location.origin)==='https://keyescape.com'&&location.pathname==='/reservation1.php')||(reservationOrigin()&&['/reservation','/reservation/create'].includes(location.pathname))),active:active&&(cells.size>0||[...widgets].some(w=>w.host.isConnected))};},configure(config){
     const helper=XRSettings.helperState(config,location.origin);
     const enabled=window===window.top&&helper.supported&&helper.registered&&helper.enabled&&helper.opening;
     if(enabled===active)return;

@@ -8,7 +8,8 @@ function fixture(tabURL='https://example.com/page',version='1.4.1') {
  const chrome={runtime:{id:'test',getManifest:()=>({version}),getURL:p=>'chrome-extension://test/'+p,onInstalled:event,onStartup:event,onMessage:event},permissions:{onRemoved:event,onAdded:event},
  storage:{local:{get:async()=>state,set:async o=>Object.assign(state,o),remove:async k=>{delete state[k];}}},
  tabs:{get:async()=>({id:7,url:tabURL}),reload:async id=>reloaded.push(id),create:async data=>opened.push(data)}};
- const ctx=vm.createContext({chrome,console,URL,Date,importScripts(){}});vm.runInContext(fs.readFileSync('background.js','utf8'),ctx);
+ chrome.alarms={get:async()=>({}),onAlarm:event};
+ const ctx=vm.createContext({chrome,console,URL,Date,fetch,TextEncoder});ctx.importScripts=(...files)=>files.forEach(file=>vm.runInContext(fs.readFileSync(file,'utf8'),ctx));vm.runInContext(fs.readFileSync('background.js','utf8'),ctx);
  return {run:()=>vm.runInContext('finishPendingUpdate()',ctx),state,reloaded,opened};
 }
 test('successful upgrade reloads only the unchanged originating tab',async()=>{

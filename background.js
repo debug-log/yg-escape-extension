@@ -1,4 +1,4 @@
-importScripts('settings.js');
+importScripts('settings.js', 'timetable-core.js', 'timetable-sync.js');
 
 const initial = {
   enabled: false,
@@ -19,26 +19,36 @@ const initial = {
   }]
 };
 let queue = Promise.resolve();
-const KEYESCAPE_DEFAULTS_VERSION = 5;
+const KEYESCAPE_DEFAULTS_VERSION = 6;
 
-async function addDefaultRules(config) {
+async function loadDefaultRules() {
   const response = await fetch(chrome.runtime.getURL('keyescape-weekday-fallback-rules.json'));
   if (!response.ok) throw Error('기본 규칙 파일을 불러오지 못했습니다.');
   const {rules} = await response.json();
   if (!Array.isArray(rules) || rules.length !== 35) throw Error('기본 규칙 파일을 확인해주세요.');
+  return rules;
+}
+
+async function addDefaultRules(config, restore = false) {
+  const rules = await loadDefaultRules();
   const defaultsById = new Map(rules.map(rule => [rule.id, rule]));
   const merged = config.rules.map(rule => {
     const bundled = defaultsById.get(rule.id);
     if (!bundled) return rule;
-    const samples = rule.samples || [];
-    const dates = new Set(samples.map(sample => sample.date));
-    return {...bundled, ...rule, samples: [...samples,
-      ...bundled.samples.filter(sample => !dates.has(sample.date))]
-      .sort((a, b) => a.date.localeCompare(b.date))};
+    // Only the precisely known v5 baseline can be upgraded automatically.
+    // Partial/edited samples are not evidence of an untouched old default.
+    const old = {...bundled, samples:bundled.id === 'keyescape-weekday-fallback-31-97'
+      ? bundled.samples.filter(s => !['2026-11-21','2026-11-22'].includes(s.date)) : bundled.samples};
+    if (config.keyescapeDefaultsVersion === 5 && XRTimetableCore.sameManaged(rule, old)) {
+      return {...rule, samples:structuredClone(bundled.samples)};
+    }
+    return rule;
   });
   const existing = new Set(merged.map(rule => rule.id));
   return {...config, keyescapeDefaultsVersion: KEYESCAPE_DEFAULTS_VERSION,
-    rules: [...merged, ...rules.filter(rule => !existing.has(rule.id))]};
+    rules: [...merged, ...rules.filter(rule => !existing.has(rule.id) &&
+      (restore || !config.keyescapeDefaultsVersion ||
+       (config.keyescapeDefaultsVersion < 5 && rule.id === 'keyescape-weekday-fallback-31-97')))]};
 }
 
 async function sync() {
@@ -59,11 +69,11 @@ async function sync() {
   }
 
   const allowed = [];
-  for (const site of config.sites) {
+  for (const site of new Set(config.sites.flatMap(XRSettings.siteOrigins))) {
     if (await chrome.permissions.contains({origins: [site + '/*']})) allowed.push(site);
   }
   const exceptions = (config.antiDebugDisabledSites || []).filter(site => allowed.includes(site));
-  const sitesChanged = allowed.length !== config.sites.length;
+  const sitesChanged = JSON.stringify(allowed) !== JSON.stringify(config.sites);
   const exceptionsChanged = JSON.stringify(exceptions) !== JSON.stringify(config.antiDebugDisabledSites);
   if (sitesChanged || exceptionsChanged) {
     config = {...config, sites: allowed, antiDebugDisabledSites: exceptions};
@@ -81,7 +91,7 @@ async function sync() {
   const matches = allowed.map(site => site + '/*');
   const scripts = [
     {id: 'xr-main', matches, js: ['engine.js', 'hook.js'], runAt: 'document_start', world: 'MAIN', allFrames: false},
-    {id: 'xr-bridge', matches, js: ['settings.js', 'date-unlock.js', 'opening.js', 'opening-ui.js', 'play33.js', 'bridge.js'], runAt: 'document_start', world: 'ISOLATED', allFrames: true},
+    {id: 'xr-bridge', matches, js: ['settings.js', 'date-unlock.js', 'opening.js', 'opening-ui.js', 'play33.js', 'rabbithole.js', 'bridge.js'], runAt: 'document_start', world: 'ISOLATED', allFrames: true},
     {id: 'xr-anti-main', matches, js: ['vendor/acorn.js', 'anti-debug.js'], runAt: 'document_start', world: 'MAIN', allFrames: true}
   ];
   const existing = new Set(current.map(script => script.id));
@@ -122,24 +132,29 @@ async function saveSiteSettings(message) {
   if (!['http:', 'https:'].includes(url.protocol) || url.origin !== message.site) {
     throw Error('올바른 사이트 주소가 필요합니다.');
   }
+  const requestedSite = message.site;
+  if (!['antiDebug', 'register'].includes(message.setting)) {
+    message = {...message, site: XRSettings.canonicalSite(message.site)};
+  }
   const helperSetting = ['helper', 'opening', 'timetable', 'startHelper'].includes(message.setting);
-  if (!['dateUnlock', 'play33', 'antiDebug', 'restoreDefaults', 'register', 'helper', 'opening', 'timetable', 'startHelper'].includes(message.setting)
+  if (!['dateUnlock', 'play33', 'rabbithole', 'antiDebug', 'restoreDefaults', 'register', 'helper', 'opening', 'timetable', 'startHelper'].includes(message.setting)
       || (helperSetting && !XRSettings.helperSites.includes(message.site))
+      || (message.setting === 'rabbithole' && message.site !== 'https://www.rabbitholeescape.co.kr')
       || (message.setting === 'play33' && message.site !== 'https://play33.kr')
       || (['dateUnlock', 'restoreDefaults', 'timetable'].includes(message.setting) && message.site !== 'https://keyescape.com')) {
     throw Error('지원하지 않는 사이트 설정입니다.');
   }
-  if (['dateUnlock', 'play33', 'antiDebug', 'helper', 'opening', 'timetable'].includes(message.setting) && typeof message.enabled !== 'boolean') {
+  if (['dateUnlock', 'play33', 'rabbithole', 'antiDebug', 'helper', 'opening', 'timetable'].includes(message.setting) && typeof message.enabled !== 'boolean') {
     throw Error('설정 값을 확인해주세요.');
   }
-  if (!await chrome.permissions.contains({origins: [message.site + '/*']})) {
+  if (!await chrome.permissions.contains({origins: [requestedSite + '/*']})) {
     throw Error('사이트 접근 권한을 먼저 허용해주세요.');
   }
   const {config: current = initial} = await chrome.storage.local.get('config');
-  let config = {...current, sites: [...new Set([...current.sites, message.site])]};
+  let config = {...current, sites: [...new Set([...current.sites, requestedSite])]};
   if (typeof config.keyescapeTimetableEnabled !== 'boolean') config.keyescapeTimetableEnabled = !!current.enabled;
   const setSiteFlag = (field, enabled) => {
-    const disabled = new Set(config[field] || []);
+    const disabled = new Set((config[field] || []).map(XRSettings.canonicalSite));
     if (enabled) disabled.delete(message.site); else disabled.add(message.site);
     config[field] = [...disabled];
   };
@@ -152,21 +167,47 @@ async function saveSiteSettings(message) {
     if (message.site === 'https://keyescape.com') {
       config.keyescapeDateUnlockEnabled = true;
       config.keyescapeTimetableEnabled = true;
-    } else config.play33Enabled = true;
+    } else if (message.site === 'https://play33.kr') config.play33Enabled = true;
+    else config.rabbitholeEnabled = true;
   }
   if (message.setting === 'dateUnlock') config.keyescapeDateUnlockEnabled = message.enabled;
   if (message.setting === 'play33') config.play33Enabled = message.enabled;
+  if (message.setting === 'rabbithole') config.rabbitholeEnabled = message.enabled;
   if (message.setting === 'antiDebug') {
     const disabled = new Set(config.antiDebugDisabledSites || []);
     if (message.enabled) disabled.delete(message.site);
     else disabled.add(message.site);
     config.antiDebugDisabledSites = [...disabled];
   }
-  if (message.setting === 'restoreDefaults') config = await addDefaultRules(config);
-  await chrome.storage.local.set({config});
+  const persistence = {};
+  if (message.setting === 'restoreDefaults') {
+    const previousIds = new Set(config.rules.map(rule => rule.id));
+    config = await addDefaultRules(config, true);
+    const {keyescapeTimetable:state} = await chrome.storage.local.get('keyescapeTimetable');
+    if (state?.feed) {
+      try {
+        const defaults = await loadDefaultRules();
+        const feed = XRTimetableCore.validateFeed(state.feed, defaults);
+        const fresh = XRTimetableCore.mergeFeed(config, null, feed, defaults).config;
+        config.rules = config.rules.map(rule => previousIds.has(rule.id) ? rule : fresh.rules.find(r => r.id === rule.id));
+        const restored = config.rules.filter(rule => !previousIds.has(rule.id));
+        const restoredIds = new Set(restored.map(rule => rule.id));
+        persistence.keyescapeTimetable = {...state,
+          baselines:{...state.baselines,...Object.fromEntries(restored.map(rule => [rule.id,rule]))},
+          protectedRuleIds:(state.protectedRuleIds || []).filter(id => !restoredIds.has(id))};
+      } catch { /* Keep bundled defaults if the saved feed is invalid. */ }
+    }
+  }
+  await chrome.storage.local.set({...persistence,config});
   await sync();
   return (await chrome.storage.local.get('config')).config;
 }
+
+const timetableSync = XRTimetableSync.createSync({chrome, fetch, enqueue, bundledRules:loadDefaultRules});
+chrome.alarms.onAlarm.addListener(alarm => {
+  if (alarm.name === XRTimetableSync.ALARM) schedule().then(() => timetableSync.check()).catch(() => {});
+});
+timetableSync.ensureAlarm().catch(error => console.error('Timetable alarm', error));
 
 async function finishPendingUpdate() {
   const {updatePending: pending} = await chrome.storage.local.get('updatePending');
@@ -188,8 +229,9 @@ async function finishPendingUpdate() {
   await chrome.tabs.create({url: chrome.runtime.getURL('update.html?complete=1')});
 }
 
-function startExtension() {
+function startExtension(details) {
   schedule().then(finishPendingUpdate).catch(error => console.error('Extension startup', error));
+  schedule().then(() => timetableSync.check({force:!!details?.reason})).catch(() => {});
 }
 
 chrome.runtime.onInstalled.addListener(startExtension);

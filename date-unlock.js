@@ -4,7 +4,7 @@
   const hint='확장 프로그램으로 선택 제한을 해제한 날짜';
   const changed=new Map(),blocked=new Set();
   let active=false,ready=false,count=0,timer=null,rules=[],style=null;
-  const eligible=()=>window===window.top&&location.origin==='https://keyescape.com'&&location.pathname==='/reservation1.php';
+  const eligible=()=>window===window.top&&XRSettings.canonicalSite(location.origin)==='https://keyescape.com'&&location.pathname==='/reservation1.php';
   const observe=()=>observer.observe(document,{childList:true,subtree:true,attributes:true,attributeFilter:['class','data-date']});
   function selection(){
     const params=new URLSearchParams(location.search);
@@ -105,7 +105,7 @@
   globalThis.XRDateUnlock={
     configure(config){
       ready=true;
-      rules=(config.rules||[]).filter(rule=>rule.site===location.origin);
+      rules=(config.rules||[]).filter(rule=>XRSettings.canonicalSite(rule.site)===XRSettings.canonicalSite(location.origin));
       const helper=XRSettings.helperState(config,location.origin);
       const enabled=eligible()&&helper.registered&&helper.enabled&&helper.dateUnlock;
       if(!enabled){stop();return;}

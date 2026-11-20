@@ -1,15 +1,21 @@
 (function(root) {
-  const helperSites = ['https://keyescape.com', 'https://play33.kr'];
+  const helperSites = ['https://keyescape.com', 'https://play33.kr', 'https://www.rabbitholeescape.co.kr'];
+  const canonicalSite = origin => origin === 'https://www.keyescape.com' ? helperSites[0] : origin;
+  const siteOrigins = origin => canonicalSite(origin) === helperSites[0]
+    ? [helperSites[0], 'https://www.keyescape.com'] : [origin];
+  const permissionOrigins = origin => siteOrigins(origin).map(site => site + '/*');
+  const siteDisabled = (sites, origin) => (sites || []).some(site => canonicalSite(site) === canonicalSite(origin));
   function helperState(config, origin) {
-    const key = origin === helperSites[0], play = origin === helperSites[1];
+    const key = canonicalSite(origin) === helperSites[0], play = origin === helperSites[1], rabbit = origin === helperSites[2];
     return {
-      supported: key || play,
+      supported: key || play || rabbit,
       registered: config.sites.includes(origin),
-      enabled: (key || play) && !(config.helperDisabledSites || []).includes(origin),
-      opening: (key || play) && !(config.openingDisabledSites || []).includes(origin),
+      enabled: (key || play || rabbit) && !siteDisabled(config.helperDisabledSites, origin),
+      opening: (key || play || rabbit) && !siteDisabled(config.openingDisabledSites, origin),
       dateUnlock: key && config.keyescapeDateUnlockEnabled !== false,
       timetable: key && (config.keyescapeTimetableEnabled ?? !!config.enabled),
-      play33: play && config.play33Enabled !== false
+      play33: play && config.play33Enabled !== false,
+      rabbithole: rabbit && config.rabbitholeEnabled !== false
     };
   }
 
@@ -54,8 +60,12 @@
   function responseConfig(config, origin) {
     const helper = helperState(config, origin);
     const timetable = helper.registered && helper.enabled && helper.timetable;
-    const rules = config.rules.filter(rule => rule.site === origin
-      && (isBundledRule(rule) ? timetable : config.enabled));
+    const rules = config.rules.filter(rule => canonicalSite(rule.site) === canonicalSite(origin)
+      && (isBundledRule(rule) ? timetable : config.enabled)).map(rule => {
+        if (rule.site === origin) return rule;
+        return {...rule, site: origin, url: rule.url.startsWith(rule.site + '/')
+          ? origin + rule.url.slice(rule.site.length) : rule.url};
+      });
     return {enabled: helper.registered && rules.some(rule => rule.enabled), rules};
   }
 
@@ -74,7 +84,7 @@
       ? after.keyescapeDateUnlockEnabled !== false
       : current.keyescapeDateUnlockEnabled !== false;
     if (before.enabled !== after.enabled) next.enabled = after.enabled;
-    for (const field of ['play33Enabled', 'keyescapeTimetableEnabled']) {
+    for (const field of ['play33Enabled', 'rabbitholeEnabled', 'keyescapeTimetableEnabled']) {
       if (before[field] !== after[field]) next[field] = after[field];
     }
 
@@ -97,7 +107,16 @@
     );
     for (const rule of after.rules) {
       const previous = before.rules.find(candidate => candidate.id === rule.id);
-      if (JSON.stringify(previous) !== JSON.stringify(rule)) rules.set(rule.id, rule);
+      if (!previous) rules.set(rule.id, rule);
+      else if (JSON.stringify(previous) !== JSON.stringify(rule) && rules.has(rule.id)) {
+        const merged = {...rules.get(rule.id)};
+        for (const field of new Set([...Object.keys(previous), ...Object.keys(rule)])) {
+          if (JSON.stringify(previous[field]) === JSON.stringify(rule[field])) continue;
+          if (Object.hasOwn(rule, field)) merged[field] = rule[field];
+          else delete merged[field];
+        }
+        rules.set(rule.id, merged);
+      }
     }
 
     const beforeIds = before.rules.map(rule => rule.id);
@@ -109,7 +128,7 @@
     return next;
   }
 
-  const api = {mergeConfig, helperState, helperSites, responseConfig, isBundledRule};
+  const api = {mergeConfig, helperState, helperSites, responseConfig, isBundledRule, canonicalSite, siteOrigins, permissionOrigins, siteDisabled};
   if (typeof module !== 'undefined') module.exports = api;
   else { root.XRSettings = api; root.mergeConfig = mergeConfig; }
 })(globalThis);

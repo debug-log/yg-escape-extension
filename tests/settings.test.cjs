@@ -1,4 +1,12 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const {mergeConfig}=require('../settings.js');
+test('stale name edits preserve freshly downloaded samples while explicit sample edits win',()=>{
+ const before={enabled:false,sites:[],rules:[{id:'a',name:'old',samples:[1]}]};
+ const current={...before,rules:[{id:'a',name:'old',samples:[2]}]};
+ const after={...before,rules:[{id:'a',name:'new',samples:[1]}]};
+ assert.deepEqual(mergeConfig(current,before,after).rules,[{id:'a',name:'new',samples:[2]}]);
+ after.rules[0].samples=[3];
+ assert.deepEqual(mergeConfig(current,before,after).rules[0].samples,[3]);
+});
 test('stale editor preserves current enabled and unrelated edits',()=>{const before={enabled:false,sites:['https://a'],rules:[{id:'a',name:'old'}]};const current={...before,enabled:true,rules:[...before.rules,{id:'b',name:'other tab'}]};const after={...before,rules:[{id:'a',name:'new'}]};const out=mergeConfig(current,before,after);assert.equal(out.enabled,true);assert.deepEqual(out.rules,[{id:'a',name:'new'},{id:'b',name:'other tab'}]);});
 test('site removal preserves concurrently added sites',()=>assert.deepEqual(mergeConfig({enabled:true,sites:['a','b'],rules:[]},{enabled:true,sites:['a'],rules:[]},{enabled:true,sites:[],rules:[]}).sites,['b']));
 test('anti-debug defaults and concurrent per-site exceptions survive stale saves',()=>{
@@ -24,7 +32,7 @@ const {helperState}=require('../settings.js');
 const key='https://keyescape.com',play='https://play33.kr';
 test('helper master preserves feature selections and is isolated by exact site',()=>{
  const config={enabled:true,sites:[key,play],rules:[],helperDisabledSites:[key],openingDisabledSites:[key],keyescapeDateUnlockEnabled:false};
- assert.deepEqual(helperState(config,key),{supported:true,registered:true,enabled:false,opening:false,dateUnlock:false,timetable:true,play33:false});
+ assert.deepEqual(helperState(config,key),{supported:true,registered:true,enabled:false,opening:false,dateUnlock:false,timetable:true,play33:false,rabbithole:false});
  assert.equal(helperState(config,play).enabled,true);
  assert.equal(helperState(config,key+':8443').supported,false);
  assert.equal(helperState({...config,helperDisabledSites:[]},key).dateUnlock,false);

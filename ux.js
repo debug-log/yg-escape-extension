@@ -2,7 +2,7 @@
  const E=typeof module!=='undefined'?require('./engine.js'):root.XREngine;
  function preset({page,name,action,replacement}){
   const u=new URL(page.trim());
-  if(u.origin!=='https://keyescape.com')throw Error('키이스케이프 예약 페이지 주소를 넣어주세요. https://keyescape.com 으로 시작해야 합니다.');
+  if(!['https://keyescape.com','https://www.keyescape.com'].includes(u.origin))throw Error('키이스케이프 예약 페이지 주소를 넣어주세요. https://keyescape.com 으로 시작해야 합니다.');
   const pageParams={};for(const k of ['zizum_num','theme_num','theme_info_num']){const v=u.searchParams.get(k);if(v)pageParams[k]=v;}
   if(!pageParams.zizum_num||!pageParams.theme_num)throw Error('테마가 포함된 예약 페이지 주소가 필요합니다. 주소창의 전체 주소를 붙여넣으세요.');
   if(!name.trim())throw Error('나중에 알아볼 수 있도록 테마 이름을 입력하세요.');

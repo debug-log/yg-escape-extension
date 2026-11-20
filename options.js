@@ -7,7 +7,7 @@ function render(){
  renderHelpers(config);
  const selectedSite=$('site').value;
  $('sites').replaceChildren();$('site').replaceChildren();
- for(const site of config.sites){const opt=document.createElement('option');opt.value=site;opt.textContent=site;$('site').append(opt);const row=document.createElement('div');row.className='item';row.append(document.createTextNode(site),button('삭제',async()=>{config.sites=config.sites.filter(s=>s!==site);await persist();await chrome.permissions.remove({origins:[site+'/*']});message('사이트를 해제했습니다. 방해 완화를 완전히 해제하려면 대상 페이지를 새로고침하세요.');}));const label=document.createElement('label');const toggle=document.createElement('input');toggle.type='checkbox';toggle.checked=!(config.antiDebugDisabledSites||[]).includes(site);toggle.setAttribute('aria-label',site+' 개발자도구 방해 완화');
+ for(const site of config.sites){const opt=document.createElement('option');opt.value=site;opt.textContent=site;$('site').append(opt);const row=document.createElement('div');row.className='item';row.append(document.createTextNode(site),button('삭제',async()=>{config.sites=config.sites.filter(s=>s!==site);await persist();await chrome.permissions.remove({origins:XRSettings.permissionOrigins(site)});message('사이트를 해제했습니다. 방해 완화를 완전히 해제하려면 대상 페이지를 새로고침하세요.');}));const label=document.createElement('label');const toggle=document.createElement('input');toggle.type='checkbox';toggle.checked=!(config.antiDebugDisabledSites||[]).includes(site);toggle.setAttribute('aria-label',site+' 개발자도구 방해 완화');
  toggle.onchange=async()=>{toggle.disabled=true;try{const disabled=new Set(config.antiDebugDisabledSites||[]);if(toggle.checked)disabled.delete(site);else disabled.add(site);config.antiDebugDisabledSites=[...disabled];await persist();message('방해 완화 설정을 저장했습니다. 대상 페이지를 새로고침하세요.');}catch(e){message(e.message,true);}finally{toggle.disabled=false;}};
  label.append(toggle,document.createTextNode(' 개발자도구 방해 완화'));row.append(label);
  $('sites').append(row);}
@@ -37,7 +37,7 @@ function fill(r){scopeCleared=false;$('scopeBox').hidden=!r.pageParams;$('scopeT
 function visibility(){$('patchLabel').hidden=$('action').value!=='patch';$('replaceLabel').hidden=$('action').value!=='replace';$('fallbackLabel').hidden=$('action').value!=='weekdayFallback';}
 function read(){const original=config.rules.find(r=>r.id===editing);const rule={...(original||{}),id:editing||crypto.randomUUID(),enabled:$('ruleEnabled').checked};for(const k of ['name','site','url','match','method','action'])rule[k]=$(k).value;if(scopeCleared){for(const key of ['pageParams','pageURL','template','themeName'])delete rule[key];}else if(rule.pageParams&&original.site!==rule.site)throw Error('다른 사이트로 바꾸려면 먼저 테마 범위 제한을 해제하세요.');rule.conditions=JSON.parse($('conditions').value);rule.requestParams=JSON.parse($('requestParams').value||'{}');if(rule.action==='patch')rule.patches=JSON.parse($('patches').value);else if(rule.action==='replace')rule.replacement=JSON.parse($('replacement').value);else{const f=JSON.parse($('fallbackConfig').value);for(const k of ['dateParam','allowedMessages','samples'])rule[k]=f[k];}return XREngine.validate(rule);}
 $('action').onchange=visibility;
-$('addSite').onclick=async()=>{try{const url=new URL($('siteInput').value);if(!['http:','https:'].includes(url.protocol)||url.username||url.password)throw Error('HTTP 또는 HTTPS 사이트를 입력하세요.');const site=url.origin;const granted=await chrome.permissions.request({origins:[site+'/*']});if(!granted){message('사이트 권한이 허용되지 않았습니다.',true);return;}if(!config.sites.includes(site))config.sites.push(site);await persist();const result=await chrome.runtime.sendMessage({type:'sync'});if(!result.ok)throw Error(result.error);message('사이트를 등록했습니다. 대상 페이지를 새로고침하세요.');}catch(e){message(e.message,true);}};
+$('addSite').onclick=async()=>{try{const url=new URL($('siteInput').value);if(!['http:','https:'].includes(url.protocol)||url.username||url.password)throw Error('HTTP 또는 HTTPS 사이트를 입력하세요.');const site=url.origin;const granted=await chrome.permissions.request({origins:XRSettings.permissionOrigins(site)});if(!granted){message('사이트 권한이 허용되지 않았습니다.',true);return;}if(!config.sites.includes(site))config.sites.push(site);await persist();const result=await chrome.runtime.sendMessage({type:'sync'});if(!result.ok)throw Error(result.error);message('사이트를 등록했습니다. 대상 페이지를 새로고침하세요.');}catch(e){message(e.message,true);}};
 $('newRule').onclick=()=>fill({name:'새 규칙',site:config.sites[0]||'',url:'',match:'contains',method:'ANY',enabled:false,action:'patch',conditions:[],patches:[{path:'data[*].enable',value:'Y'}]});
 async function saveAdvanced(enable=false){try{const rule=read();if(!config.sites.includes(rule.site))throw Error('먼저 사이트를 등록하세요.');const i=config.rules.findIndex(r=>r.id===editing);if(i<0)config.rules.push(rule);else config.rules[i]=rule;if(enable)rule.enabled=true;const bundled=XRSettings.isBundledRule(rule);if(enable&&bundled)config.keyescapeTimetableEnabled=true;editing=rule.id;await persist(enable&&!bundled);$('site').value=rule.site;message('규칙을 저장했습니다. 활성화된 규칙은 이후 완료되는 요청에 적용됩니다.');}catch(e){message(e.message,true);}};
 $('save').onclick=()=>saveAdvanced(false);
@@ -52,7 +52,7 @@ function quickVisibility(){$('quickReplacementLabel').hidden=$('quickAction').va
 $('quickAction').onchange=quickVisibility;
 async function useCurrent(notify=true){const {pageContext}=await chrome.storage.session.get('pageContext');if(pageContext?.url){
  const origin=new URL(pageContext.url).origin;
- if(origin!=='https://keyescape.com'){
+ if(XRSettings.canonicalSite(origin)!=='https://keyescape.com'){
   if(notify){$('newRule').onclick();$('siteInput').value=origin;if(config.sites.includes(origin))$('site').value=origin;message('일반 응답 규칙 편집기를 열었습니다. 사이트를 등록하고 요청 URL과 응답 조건을 설정하세요.');}
   return;
  }
@@ -65,7 +65,7 @@ chrome.storage.onChanged.addListener((changes,area)=>{if(area==='session'&&chang
 function quickRule(){let replacement;if($('quickAction').value==='replace'){try{replacement=JSON.parse($('quickReplacement').value);}catch{throw Error('교체할 응답에 전체 JSON을 붙여넣으세요. 중괄호와 쉼표를 확인해주세요.');}}return XRUX.preset({page:$('quickPage').value,name:$('quickName').value,action:$('quickAction').value,replacement});}
 function quickPreview(){const rule=quickRule();$('quickResult').textContent=rule.action==='replace'?XRUX.summary(rule.replacement):'성공 응답의 시간대 목록을 유지하고 선택 상태만 변경합니다.';$('quickResult').className='success';return rule;}
 $('quickPreview').onclick=()=>{try{quickPreview();message('');}catch(e){message(e.message,true);}};
-$('quickSave').onclick=async()=>{try{const rule=quickPreview();const granted=await chrome.permissions.request({origins:[rule.site+'/*']});if(!granted)throw Error('사이트 권한이 허용되지 않아 저장하지 않았습니다.');if(!config.sites.includes(rule.site))config.sites.push(rule.site);rule.id=quickEditing||crypto.randomUUID();const i=config.rules.findIndex(r=>r.id===rule.id);if(i<0)config.rules.unshift(rule);else{config.rules.splice(i,1);config.rules.unshift(rule);}await persist(true);quickEditing=rule.id;$('quickTitle').textContent='편집 중: '+rule.name;message('저장하고 켰습니다. 이 설정을 우선 적용합니다. 예약 페이지를 새로고침한 뒤 날짜를 선택하세요.');}catch(e){message(e.message,true);}};
+$('quickSave').onclick=async()=>{try{const rule=quickPreview();const granted=await chrome.permissions.request({origins:XRSettings.permissionOrigins(rule.site)});if(!granted)throw Error('사이트 권한이 허용되지 않아 저장하지 않았습니다.');if(!config.sites.includes(rule.site))config.sites.push(rule.site);rule.id=quickEditing||crypto.randomUUID();const i=config.rules.findIndex(r=>r.id===rule.id);if(i<0)config.rules.unshift(rule);else{config.rules.splice(i,1);config.rules.unshift(rule);}await persist(true);quickEditing=rule.id;$('quickTitle').textContent='편집 중: '+rule.name;message('저장하고 켰습니다. 이 설정을 우선 적용합니다. 예약 페이지를 새로고침한 뒤 날짜를 선택하세요.');}catch(e){message(e.message,true);}};
 const openBranches=new Set(),closedSites=new Set();
 $('ruleSearch').oninput=renderQuick;
 $('collapseRules').onclick=()=>{openBranches.clear();for(const r of config.rules)closedSites.add(r.site||'');$('ruleSearch').value='';renderQuick();};
@@ -118,7 +118,7 @@ $('restoreDefaults').onclick = async () => {
  if (control.disabled) return;
  control.disabled = true;
  try {
-  const granted = await chrome.permissions.request({origins: ['https://keyescape.com/*']});
+  const granted = await chrome.permissions.request({origins: XRSettings.permissionOrigins('https://keyescape.com')});
   if (!granted) throw Error('사이트 접근 권한이 필요합니다.');
   const result = await chrome.runtime.sendMessage({type: 'siteSetting', site: 'https://keyescape.com', setting: 'restoreDefaults'});
   if (!result?.ok) throw Error(result?.error || '확장 프로그램을 새로고침한 뒤 다시 시도해주세요.');
@@ -142,12 +142,15 @@ const helperControls = [
  ['keyescapeTimetable','https://keyescape.com','timetable','timetable'],
  ['play33Helper','https://play33.kr','helper','enabled'],
  ['play33Opening','https://play33.kr','opening','opening'],
- ['play33Toggle','https://play33.kr','play33','play33']
+ ['play33Toggle','https://play33.kr','play33','play33'],
+ ['rabbitholeHelper','https://www.rabbitholeescape.co.kr','helper','enabled'],
+ ['rabbitholeOpening','https://www.rabbitholeescape.co.kr','opening','opening'],
+ ['rabbitholeToggle','https://www.rabbitholeescape.co.kr','rabbithole','rabbithole']
 ];
 let helperBusy=false;
 function renderHelpers(current){
- for(const [prefix,site] of [['keyescape','https://keyescape.com'],['play33','https://play33.kr']]){
-  const helper=XRSettings.helperState(current,site),start=$(prefix==='keyescape'?'enableKeyescape':'enablePlay33');
+ for(const [prefix,site] of [['keyescape','https://keyescape.com'],['play33','https://play33.kr'],['rabbithole','https://www.rabbitholeescape.co.kr']]){
+  const helper=XRSettings.helperState(current,site),start=$(prefix==='keyescape'?'enableKeyescape':prefix==='play33'?'enablePlay33':'enableRabbithole');
   start.hidden=helper.registered;start.disabled=helperBusy||helper.registered;
   $(prefix+'Helper').hidden=!helper.registered;
   $(prefix+'DefaultState').textContent=!helper.registered?'사용 전 · 사이트 접근 권한이 필요합니다.':!helper.enabled?'예약 도우미 꺼짐 · 기능별 선택 유지':'예약 도우미 켜짐 · 기능을 바꾼 뒤 예약 페이지에서 확인하세요.';
@@ -165,7 +168,7 @@ async function changeHelper(control,site,setting,enabled){
  helperBusy=true;renderHelpers(config);message('');
  try{
   if(setting==='startHelper'){
-   const granted=await chrome.permissions.request({origins:[site+'/*']});
+   const granted=await chrome.permissions.request({origins:XRSettings.permissionOrigins(site)});
    if(!granted)throw Error('사이트 접근 권한이 허용되지 않아 시작하지 않았습니다. 사용 시작을 눌러 다시 허용해주세요.');
   }
   const command={type:'siteSetting',site,setting};
@@ -174,7 +177,7 @@ async function changeHelper(control,site,setting,enabled){
   if(!result?.ok)throw Error(result?.error||'확장 프로그램의 응답이 없습니다. chrome://extensions에서 확장을 새로고침한 뒤 다시 시도해주세요.');
   config=result.config;baseline=structuredClone(config);render();renderQuick();
   message(setting==='startHelper'
-   ?site==='https://keyescape.com'?'키이스케이프 예약 도우미를 시작했습니다. 오픈 일정 안내·날짜 선택 제한 해제·기본 시간표를 켰습니다. 열려 있는 예약 페이지를 새로고침하세요.':'플레이33 예약 도우미를 시작했습니다. 오픈 일정 안내·예약 선택 패널을 켰습니다. 열려 있는 예약 페이지를 새로고침하세요.'
+   ?site==='https://keyescape.com'?'키이스케이프 예약 도우미를 시작했습니다. 오픈 일정 안내·날짜 선택 제한 해제·기본 시간표를 켰습니다. 열려 있는 예약 페이지를 새로고침하세요.':(site==='https://play33.kr'?'플레이33':'래빗홀')+' 예약 도우미를 시작했습니다. 오픈 일정 안내·예약 선택 패널을 켰습니다. 열려 있는 예약 페이지를 새로고침하세요.'
    :setting==='helper'&&!enabled?'이 사이트의 예약 도우미를 껐습니다. 다시 켜면 이전에 선택한 기능을 복원합니다.':'설정을 저장했습니다. 열려 있는 예약 페이지에서 적용 상태를 확인하세요.');
  }catch(error){
   const saved=await chrome.storage.local.get('config');
@@ -185,6 +188,7 @@ async function changeHelper(control,site,setting,enabled){
 for(const [id,site,setting] of helperControls)$(id).onchange=()=>changeHelper($(id),site,setting,$(id).checked);
 $('enableKeyescape').onclick=()=>changeHelper($('enableKeyescape'),'https://keyescape.com','startHelper');
 $('enablePlay33').onclick=()=>changeHelper($('enablePlay33'),'https://play33.kr','startHelper');
+$('enableRabbithole').onclick=()=>changeHelper($('enableRabbithole'),'https://www.rabbitholeescape.co.kr','startHelper');
 $('globalEnabled').onchange=async()=>{
  const control=$('globalEnabled');control.disabled=true;
  try{
@@ -195,7 +199,7 @@ $('globalEnabled').onchange=async()=>{
  }catch(error){const saved=await chrome.storage.local.get('config');if(saved.config)renderHelpers(saved.config);message(error.message,true);}
  finally{control.disabled=false;}
 };
-for(const branch of XRPlay33Catalog.branches){
+for(const [catalogId,catalog] of [['play33Catalog',XRPlay33Catalog],['rabbitholeCatalog',XRRabbitholeCatalog]])for(const branch of catalog.branches){
  const group=document.createElement('div');
  const heading=document.createElement('h3');heading.textContent=branch.name;group.append(heading);
  for(const theme of branch.themes){
@@ -205,7 +209,7 @@ for(const branch of XRPlay33Catalog.branches){
   const weekend=document.createElement('p');weekend.textContent='토·일: '+theme.weekend.join(', ');
   item.append(weekday,weekend);group.append(item);
  }
- $('play33Catalog').append(group);
+ $(catalogId).append(group);
 }
 chrome.storage.onChanged.addListener((changes,area)=>{
  if(area==='local'&&changes.config?.newValue&&baseline){

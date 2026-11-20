@@ -13,7 +13,7 @@ fs.writeFileSync(fixtureSettings,`Date.now=()=>${fixtureNow};\n`+fs.readFileSync
 fs.cpSync(path.join(root,'icons'),path.join(extensionDir,'icons'),{recursive:true});
 fs.cpSync(path.join(root,'vendor'),path.join(extensionDir,'vendor'),{recursive:true});
 const manifest=JSON.parse(fs.readFileSync(path.join(extensionDir,'manifest.json')));
-manifest.host_permissions=['https://keyescape.com/*'];
+manifest.host_permissions=['https://www.keyescape.com/*','https://keyescape.com/*'];
 fs.writeFileSync(path.join(extensionDir,'manifest.json'),JSON.stringify(manifest));
 let child,id=0,buffer='';const pending=new Map();
 function call(method,params={},sessionId){return new Promise((resolve,reject)=>{const key=++id;pending.set(key,{resolve,reject});child.stdio[3].write(JSON.stringify({id:key,method,params,...(sessionId?{sessionId}:{})})+'\0');});}
